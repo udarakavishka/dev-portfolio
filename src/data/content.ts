@@ -10,6 +10,7 @@ import {
     Stethoscope,
     MessageCircle,
     BrainCircuit,
+    FileSearch,
     Database,
     Link2,
     Bus,
@@ -106,6 +107,16 @@ export const projectsData: ProjectItem[] = [
         // isOngoing: true
     },
     {
+        id: 13,
+        title: 'DocMind',
+        subtitle: 'Local agentic RAG over Sinhala, Tamil and English documents',
+        icon: FileSearch,
+        description: 'A fully local RAG system. Drop a file in a watched folder and ask questions about it. OCR handles scanned Sinhala, Tamil and English pages, hybrid search with reranking finds the context, and a LangGraph loop plans, answers and checks itself.',
+        techStack: ['Python', 'Go', 'LangGraph', 'Ollama', 'ChromaDB', 'Streamlit', 'Tesseract'],
+        githubUrl: 'https://github.com/udaraKavishka/Local-OCR-RAG',
+        caseStudySlug: 'docmind',
+    },
+    {
         id: 2,
         title: 'URL Shortener',
         subtitle: 'Go, Gin and Redis',
@@ -183,7 +194,6 @@ export const projectsData: ProjectItem[] = [
         id: 8,
         title: 'Portfolio Website',
         subtitle: 'This site, on Next.js and Vercel',
-        tile: 'wide',
         icon: Terminal,
         description: 'A modern, professional portfolio website showcasing my skills, projects, and experience as a DevOps engineer, built with Next.js and deployed on Vercel for optimal performance and scalability.',
         techStack: ['Next.js', 'React', 'TypeScript', 'CSS Modules', 'Vercel'],
@@ -376,8 +386,12 @@ interface ResearchItem {
     institution: string;
     period: string;
     highlights: string[];
-    // Short tech chips shown under the entry in the Journey section
+    // Short tech chips shown on the home page research card
     tags?: string[];
+    // Detail page at /research/<slug>, content in research/<slug>.mdx
+    slug: string;
+    // Cover image shown on the home page card and the detail page
+    cover: string;
 }
 
 export const researchData: ResearchItem[] = [
@@ -387,11 +401,14 @@ export const researchData: ResearchItem[] = [
         institution: 'University of Jaffna (former Vavuniya Campus, now University of Vavuniya)',
         period: '2025 - 2026',
         highlights: [
-            'Built a hybrid LSTM and MLP CPU demand forecasting model with continual learning through Elastic Weight Consolidation and Experience Replay, trained on Google Cluster Traces.',
+            'Built a hybrid LSTM and MLP CPU demand forecasting model with continual learning through Elastic Weight Consolidation and Experience Replay, trained on the Alibaba cluster trace.',
             'Deployed and managed a controlled Kubernetes test environment and benchmarked the predictive autoscaler against the standard Horizontal Pod Autoscaler using a Prometheus based evidence pipeline.',
             'Analyzed cluster behaviour and resource utilization patterns to improve scaling efficiency.',
         ],
-        tags: ['PyTorch', 'LSTM', 'MLP', 'Continual learning', 'Kubernetes', 'Prometheus'],
+        tags: ['TensorFlow', 'LSTM', 'MLP', 'Continual learning', 'Kubernetes', 'Prometheus'],
+        slug: 'adaptive-cpu-autoscaling',
+        // Home card image, sized to the card's cover box; the research page keeps cover.png
+        cover: '/research/adaptive-cpu-autoscaling/card.png',
     },
 ];
 

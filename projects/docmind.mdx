@@ -1,0 +1,53 @@
+---
+title: "DocMind: A Fully Local Agentic RAG System"
+date: "2026-06-04"
+excerpt: "Drop a document into a folder and ask questions about it in Sinhala, Tamil or English. OCR, hybrid search, reranking and a LangGraph agent that checks its own answers, all running on my own machine."
+techStack: ["Python", "Go", "LangGraph", "Ollama", "qwen3", "gemma3", "nomic-embed-text", "ChromaDB", "rank-bm25", "BGE reranker", "Tesseract", "OpenCV", "FastAPI", "Streamlit"]
+githubUrl: "https://github.com/udaraKavishka/Local-OCR-RAG"
+---
+
+![DocMind summary card: hybrid retrieval, reranking, Sinhala Tamil and English OCR, and the LangGraph plan, retrieve, generate and self-critique loop](/projects/docmind/cover.png)
+
+## Problem
+
+A lot of the documents I deal with are not clean English PDFs. They are scanned pages, slides, spreadsheets, and text in Sinhala or Tamil. Most RAG demos assume digital English text and a hosted model with an API key. That breaks in two ways for me: the OCR step is either missing or English-only, and sending private documents to a cloud API is not something I want to do by default.
+
+I wanted a system where I could drop any file into a folder, ask a question in plain language, and get an answer with sources, without a single byte leaving my laptop.
+
+## Architecture / Approach
+
+<Diagram src="/projects/docmind/architecture.svg" alt="Files dropped into watched_docs go through a watcher, parsers, an OCR service, a parent-child chunker and an embedder into a BM25 index and ChromaDB. A question from the Streamlit chat goes through a LangGraph planner, hybrid retrieval over both stores, a reranker, a generator and a self-critique step that can send it back to retrieval up to three times before the cited answer returns to the user." />
+
+DocMind is split into six layers, and each one can be run and inspected on its own.
+
+**1. Watching.** A watcher on `watched_docs/` picks up new or changed files within a few seconds. There are two versions: a Go binary using `fsnotify`, and a Python `watchdog` thread inside the Streamlit app. Both debounce events so a file being copied in does not get indexed five times.
+
+**2. Parsing and OCR.** A dispatcher routes each file by extension. PDFs go through `pdfplumber` for text and tables, with OCR as a fallback for scanned pages. PPTX keeps slide text and speaker notes, DOCX keeps paragraphs and tables, and CSV or Excel files become markdown tables. Images and scanned pages go to a small FastAPI OCR service that runs Tesseract with the Sinhala, Tamil and English language packs. Before OCR, OpenCV converts the page to grayscale, applies Otsu thresholding and denoises it. If the result looks bad (DPI under 300, or fewer than 20 characters of text) it retries once with a more aggressive pipeline that upscales the image and uses adaptive thresholding, then keeps whichever result has more text.
+
+**3. Chunking and embedding.** Text is split into parent chunks of 1,024 tokens and child chunks of 256 tokens with a 50-token overlap. The small child chunks are what get embedded with `nomic-embed-text` and searched, because small chunks match questions more precisely. The parent chunk is what the model actually reads, because it carries enough surrounding context to answer from.
+
+**4. Hybrid retrieval.** Each question runs two searches: dense vector search in ChromaDB and BM25 keyword search. BM25 is tokenised on whitespace, so it works the same for Sinhala, Tamil and English, and it catches exact names and terms that an embedding can blur. The two ranked lists are merged with Reciprocal Rank Fusion (k = 60) into a top 20.
+
+**5. Reranking and the agent.** A multilingual cross-encoder, `BGE-reranker-v2-m3`, rescores the top 20 and keeps the best 10, and their parent chunks are fetched. The whole query path is a LangGraph state graph:
+
+- a **planner** (`gemma3:4b`) breaks the question into sub-questions,
+- the **retriever** runs hybrid search and reranking for each,
+- a **generator** (`qwen3:8b` in thinking mode) writes an answer that cites its sources,
+- a **critic** (`gemma3:4b`) checks whether the answer is actually grounded in the retrieved text. If it is not, the graph loops back to retrieval. After three retries it accepts the answer so a hard question cannot loop forever.
+
+**6. Frontend.** A Streamlit chat shows the answer with its citations. The sidebar has a language filter, a switch between `qwen3:8b` for quality and `gemma3:4b` for speed, a re-index button, and a debug mode that shows chunk scores, RRF scores and the raw text behind each answer.
+
+## My Contribution
+
+This is a solo project, so I built every layer. The decisions I spent the most time on:
+
+- **Two models with different jobs.** Planning and critique only need short JSON, so they use the small `gemma3:4b` with thinking turned off. Only the final answer uses the larger `qwen3:8b`. On a CPU-only laptop that split is the difference between a usable tool and a slow one.
+- **OCR as its own service.** Tesseract and OpenCV run behind a small HTTP API on port 8765. Both the Python and Go ingestion paths call the same service, and I can test OCR quality on its own without starting the rest of the stack.
+- **The retry rule for bad scans.** Low-resolution scans are where OCR breaks first, especially for Sinhala and Tamil script. The automatic retry with aggressive preprocessing has its own tests covering when it fires, that it fires at most once, and that the better of the two results wins.
+- **One config file.** Every model name, path and port lives in `config.py` and can be overridden with environment variables. Nothing else in the code hardcodes them.
+
+## Outcome
+
+DocMind runs end to end on a 12 GB RAM laptop with no GPU and no API keys. On that machine a one-page digital PDF is indexed in about 3 to 8 seconds, a scanned page in 8 to 20 seconds, and a full question takes 20 to 60 seconds with a warm cache. Most of that is the 8B model writing the answer.
+
+The trade-off is speed. A hosted model would answer in a couple of seconds. For private documents in three languages I would rather wait, and the critic step means an answer only reaches the chat after a second model has checked it against the sources. Streaming the answer into the chat as it is written is the obvious next improvement, so the wait feels shorter.

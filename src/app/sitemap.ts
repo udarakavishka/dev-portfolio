@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { getAllPosts } from '@/lib/posts'
 import { getAllCaseStudies } from '@/lib/projects'
+import { getAllResearch } from '@/lib/research'
 import { SITE_URL } from '@/lib/seo'
 
 function toDate(value?: string): Date | null {
@@ -18,6 +19,7 @@ function newest(dates: Array<Date | null>): Date {
 export default function sitemap(): MetadataRoute.Sitemap {
   const posts = getAllPosts()
   const caseStudies = getAllCaseStudies()
+  const research = getAllResearch()
 
   const blogPages: MetadataRoute.Sitemap = posts
     .map((post) => ({ post, lastModified: toDate(post.updated) ?? toDate(post.date) }))
@@ -39,10 +41,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     }))
 
+  const researchPages: MetadataRoute.Sitemap = research
+    .map((item) => ({ item, lastModified: toDate(item.date) }))
+    .filter(({ lastModified }) => lastModified !== null)
+    .map(({ item, lastModified }) => ({
+      url: `${SITE_URL}/research/${item.slug}`,
+      lastModified: lastModified as Date,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    }))
+
   const latestPost = newest(blogPages.map((page) => page.lastModified as Date))
   const latestContent = newest([
     latestPost,
     ...projectPages.map((page) => page.lastModified as Date),
+    ...researchPages.map((page) => page.lastModified as Date),
   ])
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -60,5 +73,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 
-  return [...staticPages, ...projectPages, ...blogPages]
+  return [...staticPages, ...researchPages, ...projectPages, ...blogPages]
 }

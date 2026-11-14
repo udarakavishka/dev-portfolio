@@ -1,0 +1,116 @@
+---
+title: "Adaptive CPU Auto-Scaling with Hybrid Neural Networks and Continual Learning"
+date: "2026-07-20"
+period: "2025 - 2026"
+institution: "University of Vavuniya, BSc (Hons) in IT"
+excerpt: "My final year research: a hybrid LSTM and MLP model forecasts CPU demand 30 minutes ahead, EWC and experience replay keep it accurate as workloads shift, and a Kubernetes controller scales pods before the load arrives."
+cover: "/research/adaptive-cpu-autoscaling/cover.png"
+techStack: ["Python", "TensorFlow", "Keras", "LSTM", "MLP", "EWC", "Experience Replay", "Kubernetes", "GKE", "Prometheus", "Grafana"]
+---
+
+## The problem
+
+The Horizontal Pod Autoscaler that ships with Kubernetes is reactive. It looks at CPU use, sees that it has already crossed the target, and only then adds pods. New pods take time to start, so every sudden jump in load comes with a short stretch where the service is slow or failing. CI/CD workloads make this worse because they are bursty: a batch of jobs lands, the HPA chases it, and by the time it catches up the burst may be over.
+
+A forecasting model can fix the timing, but it brings a second problem. Workloads drift. A model trained once goes stale, and the usual fix is to retrain from scratch every so often, which costs hours of compute each time. If you instead keep training the same model on new data, it tends to forget what it learned before. That is catastrophic forgetting, and it was the part of the problem I cared about most.
+
+So the question I worked on was: can a model predict CPU demand early enough to scale ahead of the load, keep learning as the workload changes, and not forget the older patterns along the way?
+
+## How it works
+
+![Six steps: real Alibaba workload data, prepare the data, hybrid model, keep learning safely with EWC and ER, test offline against baselines, run on a real GKE cluster](/research/adaptive-cpu-autoscaling/method-overview.png)
+
+### A hybrid forecaster
+
+The model has two branches that run side by side. An LSTM reads the last two hours of activity for an application (24 five-minute steps, 10 features each: raw CPU, the first difference, rolling mean, std, min and max, and time-of-day and day-of-week encodings). An MLP reads six fixed facts about the application itself, such as its GPU, memory and RDMA requests and how its instances are spread across nodes. Each branch produces a short summary, the two are joined, and the model outputs one number: CPU demand 30 minutes from now.
+
+![LSTM branch reads recent activity, MLP branch reads the app profile, both summaries are joined into one 30-minute CPU prediction](/research/adaptive-cpu-autoscaling/model-architecture.png)
+
+### Learning without forgetting
+
+I trained on the data as four chunks in time order, the way a real system would see it. Two techniques keep the model from overwriting what it already knows:
+
+- **Elastic Weight Consolidation (EWC)** works out which weights mattered for earlier chunks and adds a penalty for moving them too far (λ = 100).
+- **Experience Replay (ER)** keeps a buffer of 2,000 older samples and mixes them into each new chunk's training at a 0.2 ratio.
+
+Both only affect training. At run time it is one saved model making one prediction.
+
+### The controller
+
+On the cluster, a Kubernetes CronJob starts a small autoscaler pod every 15 minutes. It loads the model, asks Prometheus for the recent CPU use of the workload, forecasts 30 minutes ahead, works out the replica count needed, and sets it through the Kubernetes API. If anything goes wrong with the prediction, it falls back to plain reactive scaling.
+
+![Loop: CronJob every 15 minutes, autoscaler pod loads the model, asks Prometheus, predicts and decides, scales via the Kubernetes API, Prometheus records the new state](/research/adaptive-cpu-autoscaling/cluster-loop.png)
+
+## Data and setup
+
+- **Trace:** Alibaba cluster-trace-gpu-v2025, the disaggregated DLRM workload. 23,871 instances across 156 applications.
+- **Prepared series:** 1,172,923 rows in 5-minute bins, turned into 1,168,515 training sequences, then split into 4 sequential chunks of about 292,000 sequences each.
+- **Window and horizon:** 2 hours of history in, a 30-minute forecast out.
+- **One feature removed:** `instance_count` leaked the target, so I dropped it.
+- **Training:** 30 epochs, batch size 32, TensorFlow 2.21 with Keras 3.14.
+- **Live cluster:** a zonal GKE cluster of three e2-small nodes (2 vCPU, 2 GB each), with Prometheus and Grafana for evidence.
+
+The trace's CPU numbers are roughly 9,000 times larger than what my small test deployment uses, so a single scale factor maps live readings into the range the model was trained on.
+
+## Results
+
+### Accuracy on the final chunk
+
+| Method | MAE | RMSE | Over-prov. % | Under-prov. % | SLA violation % |
+|---|---:|---:|---:|---:|---:|
+| Static LSTM | 452.61 | 495.80 | 56.27 | 10.25 | 8.41 |
+| Static Hybrid | 583.30 | 920.40 | 17.19 | 68.54 | 67.14 |
+| Periodic full retrain | 483.81 | 537.42 | 59.07 | 12.04 | 6.27 |
+| **Proposed (EWC + ER)** | 492.77 | 530.57 | 62.39 | **10.03** | **5.87** |
+
+On raw accuracy, periodic retraining is about 1.9% better on MAE, and the Static LSTM has a lower final-chunk MAE than both. The proposed model has the lowest SLA violation rate and the lowest under-provisioning of the neural methods, and it gets there by holding the most spare capacity. That over-provisioning is the main cost, and it is set by a single target-utilisation value, so it can be tuned.
+
+### Retention across all four chunks
+
+Final-chunk error hides what happens to the older chunks. Averaged over every chunk after training finishes, the picture changes:
+
+| Method | Average MAE over all chunks |
+|---|---:|
+| Periodic full retrain | 610.23 |
+| **Proposed (EWC + ER)** | 619.90 |
+| Static LSTM | 3201.13 |
+| Static Hybrid | 4066.14 |
+
+The static models are about five times worse once you look past the last chunk. The proposed model stays level with full retraining without rebuilding itself each cycle. One periodic retraining pass took about 4.8 hours on my CPU training stack.
+
+### Backward transfer
+
+Backward transfer measures how error on earlier chunks changes after training on later ones. Negative means it got better.
+
+- **Proposed (EWC + ER): -857.70.** Error on chunk 1 fell from 2632.30 to 658.08, and on chunk 2 from 1605.03 to 995.32.
+- **Same model with naive fine-tuning: +1348.23.** It forgot. Chunk 1 error climbed to 6537.71.
+
+Same architecture, same data. The only difference between the two is EWC and replay.
+
+### On a live cluster
+
+I replayed a trace-shaped Alibaba demand curve against a test workload and left the controller running unattended for just under ten hours.
+
+- 40 scaling decisions, all 40 predictive, zero fallbacks, no failed jobs.
+- Replicas moved between 2 and 7 (mean 3.95) as demand changed.
+- Forecast error against the CPU actually measured 30 minutes later: MAE 0.045 vCPU. The forecasts ran slightly high in 33 of 38 pairs, which is the safe direction for an autoscaler.
+
+![Replica count over the ten-hour live run, moving between 2 and 7](/research/adaptive-cpu-autoscaling/replica-count.png)
+
+![Forecast made 30 minutes earlier against actual CPU, over the live run](/research/adaptive-cpu-autoscaling/forecast-vs-actual.png)
+
+With the predictive controller suspended and a standard HPA (80% CPU target, 1 to 10 replicas) on the same kind of load, the HPA went straight to its ten-replica ceiling and stayed there, still reading 267% of the pod's CPU request.
+
+## Limitations
+
+- The low SLA violation rate is partly paid for with spare replicas. Over-provisioning is the highest of all methods.
+- Each offline method was trained once. I planned multi-seed runs with significance tests but did not get to them, so the gaps between neural methods are observed differences, not proven ones.
+- The live cluster is small, and the scale factor between trace and cluster is a linear fix around a non-linear model. The scaling decisions hold up, but absolute live accuracy is approximate.
+- When demand sat right on a threshold the replica count flipped back and forth. A hold-down timer or hysteresis band would smooth that.
+- Everything comes from one trace and one region, so I cannot yet claim it generalises beyond Alibaba-style workloads.
+
+## What I took from it
+
+The strongest result is retention. Continual learning matched full retraining without rebuilding the model every cycle, while the naive model forgot exactly as the theory predicts. Single-chunk accuracy matters less for this kind of system than staying accurate as the workload keeps changing.
+
+Running it on a real cluster taught me more about Kubernetes than any course did, from writing Prometheus queries to understanding that a CPU percentage is measured against the pod's request, not a core.

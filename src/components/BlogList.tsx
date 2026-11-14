@@ -244,7 +244,11 @@ export default function BlogList({ posts }: BlogListProps) {
         window.addEventListener('keydown', stop);
 
         applyAnchor();
-        const raf = requestAnimationFrame(applyAnchor);
+        // Re-anchor after the instant entrance has removed the 10px offset from the rows
+        let raf = requestAnimationFrame(() => {
+            applyAnchor();
+            raf = requestAnimationFrame(applyAnchor);
+        });
         document.fonts?.ready.then(applyAnchor).catch(() => {});
 
         return () => {
@@ -328,9 +332,14 @@ export default function BlogList({ posts }: BlogListProps) {
                         return (
                             <motion.article
                                 key={post.slug}
-                                initial={restoring ? false : { opacity: 0, y: 10 }}
+                                // initial must match the server HTML, so restoring only makes the entrance instant
+                                initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: Math.min(index * 0.03, 0.6), duration: 0.4 }}
+                                transition={
+                                    restoring
+                                        ? { duration: 0 }
+                                        : { delay: Math.min(index * 0.03, 0.6), duration: 0.4 }
+                                }
                             >
                                 {/* No prefetch: the full list is ~100 posts, and each page is static anyway */}
                                 <Link

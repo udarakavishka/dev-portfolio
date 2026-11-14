@@ -2,10 +2,10 @@
 
 import { useRef } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { Briefcase, FlaskConical, GraduationCap, School, type LucideIcon } from 'lucide-react';
+import { Briefcase, GraduationCap, School, type LucideIcon } from 'lucide-react';
 import styles from './Journey.module.css';
 import EducationMedia from './EducationMedia';
-import { educationData, experienceData, researchData } from '@/data/content';
+import { educationData, experienceData } from '@/data/content';
 
 interface Entry {
     key: string;
@@ -27,22 +27,10 @@ interface Entry {
 
 const yearOf = (period: string) => period.match(/\d{4}/)?.[0] ?? period;
 
-// Education runs down the left of the spine, oldest first. Research and work happened during the degree,
-// so they sit on the right beside it and the latest degree card spans their rows.
+// Education runs down the left of the spine, oldest first. Work happened during the degree,
+// so it sits on the right beside it and the latest degree card spans its rows.
 const education = educationData.map((item, index) => ({ item, index })).reverse();
 const right = [
-    ...researchData.map((item, index) => ({
-        key: `research-${index}`,
-        kind: 'research',
-        icon: FlaskConical,
-        anchor: index === 0 ? 'research' : undefined,
-        title: item.title,
-        org: item.institution,
-        period: item.period,
-        lead: item.focus,
-        highlights: item.highlights,
-        tags: item.tags,
-    })),
     ...experienceData
         .map((item, index) => ({
             key: `work-${index}`,

@@ -277,4 +277,10 @@
     .content {
         font-size: 1rem;
     }
+
+    /* Wide results tables scroll sideways instead of pushing the page wider */
+    .content table {
+        display: block;
+        overflow-x: auto;
+    }
 }

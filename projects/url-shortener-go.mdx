@@ -6,6 +6,8 @@ techStack: ["Go", "Gin Web Framework", "Redis", "Docker"]
 githubUrl: "https://github.com/udaraKavishka/URL-Shortner"
 ---
 
+![URL Shortener in Go summary card: POST /shorten and GET /:code with a 302 redirect, backed by Redis](/projects/url-shortener-go/cover.png)
+
 ## Problem
 
 URL shortening is a well-worn exercise, but it's a good forcing function for a specific infrastructure decision: the read path (redirect lookups) massively outweighs the write path (creating a short link), and needs to be fast. I used this project to practice picking the right storage for an access pattern rather than defaulting to a relational database out of habit.
