@@ -1,6 +1,6 @@
 .clubs {
-    padding: 6rem 1rem;
-    background-color: var(--bg-secondary);
+    padding: clamp(5rem, 10vw, 8rem) 1rem;
+    background-color: var(--bg-primary);
 }
 
 .container {
@@ -8,133 +8,203 @@
     margin: 0 auto;
 }
 
-.groupLabel {
-    margin-bottom: 1rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+.wall {
+    list-style: none;
+    border-top: 1px solid var(--border-color);
 }
 
-/* 6-column grid: the first two leadership cards take half a row each, the rest a third */
-.leadGrid {
+/* ROLE ········ club + description ······ scope */
+.row {
+    position: relative;
+    isolation: isolate;
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 1rem;
-    margin-bottom: 2.75rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) 6.5rem;
+    gap: 1.5rem;
+    align-items: start;
+    padding: 1.5rem 0.75rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.leadCard {
-    grid-column: span 2;
+/* Wash that slides in under the hovered row */
+.row::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--accent-primary) 8%, transparent), transparent 80%);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s var(--ease-out);
+}
+
+.roleCell {
     display: flex;
-    flex-direction: column;
-    padding: 1.35rem 1.4rem 1.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    background-color: var(--bg-primary);
-    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    align-items: flex-start;
+    gap: 0.9rem;
+    min-width: 0;
 }
 
-.leadCard:hover {
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--accent-primary) 60%, var(--border-color));
-    box-shadow: 0 18px 40px -26px color-mix(in srgb, var(--accent-primary) 55%, transparent);
-}
-
-.leadTop {
+.roleIcon {
+    position: relative;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.1rem;
-}
-
-.leadIcon {
-    display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     width: 38px;
     height: 38px;
-    border: 1px solid color-mix(in srgb, var(--accent-primary) 40%, var(--border-color));
-    border-radius: 10px;
-    background-color: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+    margin-top: 0.2rem;
+    border: 1px solid color-mix(in srgb, var(--accent-primary) 35%, var(--border-color));
+    border-radius: 12px;
+    background-color: var(--bg-secondary);
     color: var(--accent-primary);
+    transition: transform 0.4s var(--ease-out), box-shadow 0.4s ease;
 }
 
-.scope {
-    padding: 0.15rem 0.6rem;
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--text-muted);
+.roleText {
+    min-width: 0;
+    transition: transform 0.45s var(--ease-out);
 }
 
 .role {
-    margin-bottom: 0.35rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent-primary);
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 3vw, 2.4rem);
+    font-weight: 650;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    color: var(--text-primary);
+    transition: color var(--d-ui) ease;
 }
 
-.org {
-    margin-bottom: 0.6rem;
+.roleExtra {
+    margin-top: 0.4rem;
     font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+/* Dotted leader that draws in from the role toward the club */
+.leader {
+    flex: 1;
+    min-width: 2rem;
+    height: 2px;
+    margin-top: clamp(1.15rem, 1.7vw, 1.5rem);
+    background-image: radial-gradient(circle, color-mix(in srgb, var(--text-muted) 70%, transparent) 1px, transparent 1.5px);
+    background-size: 8px 2px;
+    transform-origin: left;
+    animation: march 1.6s linear infinite;
+}
+
+@keyframes march {
+    to {
+        background-position: 8px 0;
+    }
+}
+
+.clubCell {
+    min-width: 0;
+    padding-top: 0.35rem;
+}
+
+.org,
+.memberOrg {
+    margin-bottom: 0.35rem;
+    font-family: var(--font-display);
     font-size: 1.05rem;
-    line-height: 1.4;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
     color: var(--text-primary);
+}
+
+.memberOrg {
+    font-size: 0.98rem;
 }
 
 .description {
     font-size: 0.88rem;
-    line-height: 1.65;
+    line-height: 1.6;
     color: var(--text-secondary);
+    text-wrap: pretty;
 }
 
-.memberGroups {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.memberGroup {
-    display: grid;
-    grid-template-columns: 7rem minmax(0, 1fr);
-    align-items: start;
-    gap: 1rem;
-}
-
-.memberScope {
-    padding-top: 0.45rem;
+.scope {
+    justify-self: end;
+    align-self: start;
+    margin-top: 0.4rem;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
     font-family: var(--font-mono);
-    font-size: 0.8rem;
-    color: var(--text-secondary);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
 }
 
+/* Member: one role, several clubs stacked on the right */
 .memberList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    grid-column: 2 / -1;
+    display: grid;
     list-style: none;
 }
 
-.memberChip {
-    padding: 0.45rem 0.9rem;
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-    background-color: var(--bg-primary);
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    color: var(--text-primary);
-    transition: border-color 0.2s ease, color 0.2s ease;
+.member {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 6.5rem;
+    gap: 1.5rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px dashed var(--border-color);
 }
 
-.memberChip:hover {
-    border-color: var(--accent-primary);
+.member:first-child {
+    padding-top: 0;
+}
+
+.member:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* Touch: the focused row (middle of the screen) gets the hover look; rows answer a press */
+.rowFocus::before {
+    transform: scaleX(1);
+}
+
+.rowFocus .role {
     color: var(--accent-primary);
+}
+
+.rowFocus .roleIcon {
+    transform: rotate(-8deg) scale(1.06);
+    box-shadow: 0 0 24px -4px var(--accent-glow);
+}
+
+.row {
+    transition: scale 0.16s var(--ease-out);
+}
+
+.row:active {
+    scale: 0.99;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .row:hover::before {
+        transform: scaleX(1);
+    }
+
+    .row:hover .role {
+        color: var(--accent-primary);
+    }
+
+    .row:hover .roleText {
+        transform: translateX(6px);
+    }
+
+    .row:hover .roleIcon {
+        transform: rotate(-8deg) scale(1.06);
+        box-shadow: 0 0 24px -4px var(--accent-glow);
+    }
 }
 
 .viewMoreContainer {
@@ -143,40 +213,41 @@
     margin-top: 3rem;
 }
 
-.linkedinButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 2rem;
-    background-color: var(--bg-tertiary);
-    border: 2px solid #0077b5;
-    border-radius: var(--radius-sm);
-    color: #0077b5;
-    font-family: var(--font-mono);
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.linkedinButton:hover {
-    background-color: #0077b5;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 119, 181, 0.3);
-}
-
-.linkedinButton:active {
-    transform: translateY(0);
-}
-
-@media (max-width: 900px) {
-    .leadGrid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 860px) {
+    .row,
+    .memberRow {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.6rem 1rem;
+        padding: 1.25rem 0.25rem;
     }
 
-    .leadCard {
-        grid-column: span 1;
+    .roleCell {
+        grid-column: 1;
+    }
+
+    .row > .scope {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .clubCell,
+    .memberList {
+        grid-column: 1 / -1;
+        padding-left: calc(38px + 0.9rem);
+    }
+
+    .leader {
+        display: none;
+    }
+
+    .member {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 1rem;
+    }
+
+    .member .clubCell {
+        grid-column: 1;
+        padding-left: 0;
     }
 }
 
@@ -185,16 +256,8 @@
         padding: 4rem 1rem;
     }
 
-    .leadGrid {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .memberGroup {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 0.5rem;
-    }
-
-    .memberScope {
-        padding-top: 0;
+    .clubCell,
+    .memberList {
+        padding-left: 0;
     }
 }

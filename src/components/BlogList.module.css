@@ -116,7 +116,7 @@
 }
 
 .rowActive {
-    background-color: rgba(74, 222, 128, 0.1);
+    background-color: color-mix(in srgb, var(--accent-primary) 10%, transparent);
     box-shadow: inset 3px 0 0 var(--accent-primary);
 }
 
@@ -151,7 +151,7 @@
 }
 
 .mark {
-    background-color: rgba(74, 222, 128, 0.22);
+    background-color: color-mix(in srgb, var(--accent-primary) 22%, transparent);
     color: var(--accent-primary);
     border-radius: 2px;
     padding: 0 1px;

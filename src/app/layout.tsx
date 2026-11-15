@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono } from "next/font/google";
+import { Geist, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { defaultDescription, SITE_NAME, SITE_URL } from "@/lib/seo";
 import MotionProvider from "@/components/MotionProvider";
@@ -7,6 +7,12 @@ import MotionProvider from "@/components/MotionProvider";
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+  display: "swap",
+});
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
   display: "swap",
 });
 
@@ -82,7 +88,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" data-scroll-behavior="smooth" className={geist.variable} suppressHydrationWarning>
       <head />
       <body
         className={`${jetbrainsMono.variable} antialiased`}

@@ -3,13 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
+import { AnimatePresence, motion, type PanInfo } from 'motion/react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import styles from './EducationMedia.module.css';
 import { educationData } from '@/data/content';
 
 const STRIP_COUNT = 5;
-const SWIPE_THRESHOLD = 60;
+const SWIPE_THRESHOLD = 90;
+
+// Distance a released gesture would travel while decelerating (px/s in, px out).
+const project = (velocity: number, decelerationRate = 0.998) =>
+    ((velocity / 1000) * decelerationRate) / (1 - decelerationRate);
 
 const slideVariants = {
     enter: (direction: number) => ({ x: direction >= 0 ? 80 : -80, opacity: 0 }),
@@ -68,17 +72,22 @@ export default function EducationMedia({ eduIndex }: { eduIndex: number }) {
         });
     }, []);
 
+    // Decide from where the flick is heading, not where the finger let go (Apple's momentum
+    // projection), so a short fast swipe changes photo and a slow drag past nothing springs back.
     const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        if (info.offset.x < -SWIPE_THRESHOLD) step(1);
-        else if (info.offset.x > SWIPE_THRESHOLD) step(-1);
+        const projected = info.offset.x + project(info.velocity.x);
+        if (projected < -SWIPE_THRESHOLD) step(1);
+        else if (projected > SWIPE_THRESHOLD) step(-1);
     };
 
     useEffect(() => {
         if (!isOverlayOpen) return;
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
+        window.__lenis?.stop();
         return () => {
             document.body.style.overflow = previousOverflow;
+            window.__lenis?.start();
         };
     }, [isOverlayOpen]);
 
@@ -179,10 +188,10 @@ export default function EducationMedia({ eduIndex }: { eduIndex: number }) {
                                 aria-labelledby="education-media-title"
                                 className={styles.modal}
                                 onClick={(e) => e.stopPropagation()}
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                exit={{ y: 20, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
+                                initial={{ y: 24, scale: 0.97, opacity: 0 }}
+                                animate={{ y: 0, scale: 1, opacity: 1 }}
+                                exit={{ y: 16, scale: 0.98, opacity: 0, transition: { duration: 0.16 } }}
+                                transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
                             >
                                 <div className={styles.modalHeader}>
                                     <h3 id="education-media-title" className={styles.modalTitle}>Media</h3>
@@ -264,7 +273,7 @@ export default function EducationMedia({ eduIndex }: { eduIndex: number }) {
                                         initial="enter"
                                         animate="center"
                                         exit="exit"
-                                        transition={{ duration: 0.2 }}
+                                        transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
                                         drag="x"
                                         dragConstraints={{ left: 0, right: 0 }}
                                         dragElastic={0.6}

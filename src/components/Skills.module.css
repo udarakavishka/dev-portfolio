@@ -1,6 +1,14 @@
 .skills {
-    padding: 6rem 1rem;
-    background-color: var(--bg-secondary);
+    padding: clamp(5rem, 10vw, 8rem) 1rem;
+    background:
+        radial-gradient(60% 50% at 50% 70%, var(--accent-soft), transparent 70%),
+        var(--bg-primary);
+    overflow: hidden;
+}
+
+.stage {
+    transform-origin: 50% 100%;
+    will-change: transform;
 }
 
 .container {
@@ -11,10 +19,15 @@
 /* Editor window showing the stack as a stack.yaml file */
 .editor {
     overflow: hidden;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    background-color: var(--bg-primary);
-    box-shadow: 0 24px 48px -32px rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--surface-glass-border);
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    backdrop-filter: blur(20px) saturate(150%);
+    box-shadow:
+        inset 0 1px 0 var(--surface-glass-edge),
+        var(--shadow-3),
+        0 0 120px -40px var(--accent-glow);
     font-family: var(--font-mono);
 }
 
@@ -73,8 +86,10 @@
     transition: background-color 0.15s ease;
 }
 
-.line:hover {
-    background-color: color-mix(in srgb, var(--accent-primary) 5%, transparent);
+@media (hover: hover) and (pointer: fine) {
+    .line:hover {
+        background-color: color-mix(in srgb, var(--accent-primary) 5%, transparent);
+    }
 }
 
 .lineNo {
@@ -142,7 +157,7 @@
     padding: 0 0.35rem;
     border-radius: var(--radius-sm);
     color: var(--text-primary);
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.2s var(--ease-out);
 }
 
 .value:not(:last-child)::after {
@@ -224,4 +239,113 @@
     .statusRight {
         display: none;
     }
+}
+
+/* Editor stays open: a caret waits on the next line */
+.cursor {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.1em;
+    background-color: var(--accent-primary);
+    opacity: 0.85;
+    animation: caret 1.1s steps(1) infinite;
+}
+
+@keyframes caret {
+    50% {
+        opacity: 0;
+    }
+}
+
+.liveDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--accent-primary);
+    animation: livePulse 2.4s var(--ease-out) infinite;
+}
+
+@keyframes livePulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-primary) 60%, transparent);
+    }
+    70%,
+    100% {
+        box-shadow: 0 0 0 6px transparent;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .value:hover {
+        transform: translateY(-2px);
+    }
+}
+
+/* Touch: the focused line gets the hover tint and its values light up one after another */
+.lineFocus {
+    background-color: color-mix(in srgb, var(--accent-primary) 6%, transparent);
+}
+
+.lineFocus .value {
+    color: var(--accent-primary);
+}
+
+.lineFocus .value:nth-child(1) {
+    transition-delay: 25ms;
+}
+
+.lineFocus .value:nth-child(2) {
+    transition-delay: 50ms;
+}
+
+.lineFocus .value:nth-child(3) {
+    transition-delay: 75ms;
+}
+
+.lineFocus .value:nth-child(4) {
+    transition-delay: 100ms;
+}
+
+.lineFocus .value:nth-child(5) {
+    transition-delay: 125ms;
+}
+
+.lineFocus .value:nth-child(6) {
+    transition-delay: 150ms;
+}
+
+.lineFocus .value:nth-child(7) {
+    transition-delay: 175ms;
+}
+
+.lineFocus .value:nth-child(8) {
+    transition-delay: 200ms;
+}
+
+.lineFocus .value:nth-child(9) {
+    transition-delay: 225ms;
+}
+
+.lineFocus .value:nth-child(10) {
+    transition-delay: 250ms;
+}
+
+.lineFocus .value:nth-child(11) {
+    transition-delay: 275ms;
+}
+
+.lineFocus .value:nth-child(12) {
+    transition-delay: 300ms;
+}
+
+.lineFocus .value:nth-child(13) {
+    transition-delay: 325ms;
+}
+
+.lineFocus .value:nth-child(14) {
+    transition-delay: 350ms;
+}
+
+.lineFocus .value:nth-child(15) {
+    transition-delay: 375ms;
 }

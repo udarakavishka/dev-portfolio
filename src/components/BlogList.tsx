@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Pin, Search } from 'lucide-react';
 import type { Post, SearchEntry } from '@/lib/posts';
 import { CATEGORIES, ARCHIVED_CATEGORIES } from '@/lib/categories';

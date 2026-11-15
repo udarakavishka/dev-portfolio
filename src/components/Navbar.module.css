@@ -1,158 +1,244 @@
+/* Floating glass bar. Content scrolls underneath; the material separates it, not a border. */
 .navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    background-color: var(--bg-primary);
-    border-bottom: 1px solid transparent;
-    transition: all 0.3s ease;
+    padding: 0.75rem 1rem 0;
+    pointer-events: none;
 }
 
-.navbar.scrolled {
-    background-color: var(--bg-secondary);
-    border-bottom-color: var(--border-color);
-    backdrop-filter: blur(10px);
-}
-
-.container {
+.bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 0.5rem 0.5rem 0.5rem 1.1rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    pointer-events: auto;
+    transition:
+        max-width 0.5s var(--ease-out),
+        background-color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease,
+        -webkit-backdrop-filter 0.35s ease,
+        backdrop-filter 0.35s ease;
+}
+
+.scrolled .bar {
+    max-width: 960px;
+    background: color-mix(in srgb, var(--bg-secondary) 78%, transparent);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    border-color: var(--surface-glass-border);
+    box-shadow: inset 0 1px 0 var(--surface-glass-edge), var(--shadow-2);
 }
 
 .logo {
+    flex-shrink: 0;
     font-family: var(--font-mono);
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
-    transition: color 0.2s ease;
-}
-
-.logo:hover {
-    color: var(--accent-primary);
+    transition: color var(--d-ui) ease;
 }
 
 .prompt {
     color: var(--accent-highlight);
-    margin-right: 0.5rem;
+    margin-right: 0.35rem;
 }
 
 .desktop {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 0.15rem;
 }
 
 .link {
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    transition: color 0.2s ease;
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: color var(--d-ui) ease;
 }
 
-.link::before {
-    content: '';
+.linkLabel {
+    position: relative;
+    z-index: 1;
+}
+
+.pill {
     position: absolute;
-    bottom: -4px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background-color: var(--accent-primary);
-    transition: width 0.2s ease;
-}
-
-.link:hover {
-    color: var(--accent-primary);
-}
-
-.link:hover::before {
-    width: 100%;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-primary) 25%, transparent);
 }
 
 .link.active {
     color: var(--accent-primary);
 }
 
-.link.active::before {
-    width: 100%;
-}
-
-.themeToggle {
-    background: none;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    padding: 0.5rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
+.actions {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.35rem;
 }
 
-.themeToggle:hover {
-    border-color: var(--accent-secondary);
-    color: var(--accent-secondary);
+.iconButton {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+        border-color var(--d-ui) ease,
+        color var(--d-ui) ease,
+        transform var(--d-press) var(--ease-out);
 }
 
-.mobile {
-    display: none;
-    align-items: center;
-    gap: 1rem;
+.iconButton:active {
+    transform: scale(0.94);
+}
+
+.themeIcon {
+    display: grid;
+    place-items: center;
 }
 
 .menuButton {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: none;
 }
 
+/* Reading progress hairline along the bottom edge of the bar */
+.progress {
+    position: absolute;
+    left: 1.25rem;
+    right: 1.25rem;
+    bottom: -1px;
+    height: 1px;
+    transform-origin: left;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.scrolled .progress {
+    opacity: 0.8;
+}
+
+.scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    background: rgb(0 0 0 / 0.45);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+/* Sheet drops from the bar it belongs to, and leaves the same way */
 .mobileMenu {
+    position: fixed;
+    top: 4.75rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 999;
     display: flex;
     flex-direction: column;
-    background-color: var(--bg-secondary);
-    border-top: 1px solid var(--border-color);
-    padding: 1rem;
+    padding: 0.5rem;
+    border: 1px solid var(--surface-glass-border);
+    border-radius: 22px;
+    background: var(--surface-glass-strong);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    backdrop-filter: blur(24px) saturate(170%);
+    box-shadow: inset 0 1px 0 var(--surface-glass-edge), var(--shadow-3);
+    transform-origin: top right;
 }
 
 .mobileLink {
-    font-family: var(--font-mono);
-    padding: 0.75rem 1rem;
-    color: var(--text-secondary);
-    transition: all 0.2s ease;
-    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    font-size: 1.15rem;
+    font-weight: 550;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    transition: background-color var(--d-ui) ease, color var(--d-ui) ease;
 }
 
-.mobileLink:hover,
-.mobileLink.active {
+.mobileIndex {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.mobileLink:active {
     background-color: var(--bg-tertiary);
+}
+
+.mobileLink.active {
     color: var(--accent-primary);
 }
 
-@media (max-width: 768px) {
+@media (hover: hover) and (pointer: fine) {
+    .logo:hover,
+    .link:hover {
+        color: var(--accent-primary);
+    }
+
+    .iconButton:hover {
+        border-color: var(--accent-secondary);
+        color: var(--accent-primary);
+    }
+
+    .mobileLink:hover {
+        background-color: var(--bg-tertiary);
+    }
+}
+
+@media (max-width: 860px) {
     .desktop {
         display: none;
     }
 
-    .mobile {
-        display: flex;
+    .menuButton {
+        display: grid;
+    }
+
+    .scrolled .bar {
+        max-width: 100%;
     }
 }
 
 @media (hover: none) and (pointer: coarse) {
-    .themeToggle,
-    .menuButton {
-        min-width: 44px;
-        min-height: 44px;
+    .iconButton {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .scrolled .bar,
+    .mobileMenu {
+        background: var(--bg-secondary);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
     }
 }

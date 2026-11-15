@@ -1,160 +1,206 @@
 'use client';
 
 import { useRef } from 'react';
-import { motion, useScroll, useSpring } from 'framer-motion';
-import { Briefcase, GraduationCap, School, type LucideIcon } from 'lucide-react';
+import { motion, useScroll, useSpring } from 'motion/react';
+import { Briefcase, GraduationCap, School } from 'lucide-react';
 import styles from './Journey.module.css';
 import EducationMedia from './EducationMedia';
 import { educationData, experienceData } from '@/data/content';
+import SectionHeading from './motion/SectionHeading';
+import SplitReveal from './motion/SplitReveal';
+import { gsap, useGSAP, ScrollTrigger, MOTION_OK } from '@/lib/gsap';
 
-interface Entry {
-    key: string;
-    side: 'left' | 'right';
-    row: string;
-    kind: string;
-    icon: LucideIcon;
-    anchor?: string;
-    title: string;
-    badge?: string;
-    org: string;
-    period: string;
-    current?: boolean;
-    lead?: string;
-    highlights?: string[];
-    tags?: string[];
-    mediaFor?: number;
-}
+const yearsOf = (period: string) => period.match(/\d{4}/g) ?? [period];
+const pad = (n: number) => String(n).padStart(2, '0');
+const EASE = [0.23, 1, 0.32, 1] as const;
 
-const yearOf = (period: string) => period.match(/\d{4}/)?.[0] ?? period;
-
-// Education runs down the left of the spine, oldest first. Work happened during the degree,
-// so it sits on the right beside it and the latest degree card spans its rows.
-const education = educationData.map((item, index) => ({ item, index })).reverse();
-const right = [
-    ...experienceData
-        .map((item, index) => ({
-            key: `work-${index}`,
-            kind: 'work',
-            icon: Briefcase,
-            anchor: index === 0 ? 'experience' : undefined,
-            title: item.role,
-            org: item.company,
-            period: item.period,
-            current: item.period.includes('Present'),
-            lead: item.description,
-            highlights: item.highlights,
-            tags: item.tags,
-        }))
-        .reverse(),
-];
-
-const degreeRow = education.length;
-const entries: Entry[] = [
-    ...education.map(({ item, index }, position) => {
-        const [title, badge] = item.degree.split(' - ');
-        const isDegree = position === education.length - 1;
-        return {
-            key: `edu-${index}`,
-            side: 'left' as const,
-            row: isDegree ? `${degreeRow} / span ${Math.max(right.length, 1)}` : `${position + 1}`,
-            kind: isDegree ? 'education' : 'school',
-            icon: isDegree ? GraduationCap : School,
-            anchor: index === 0 ? 'education' : undefined,
-            title,
-            badge,
-            org: item.institution,
-            period: item.period,
-            lead: item.description,
-            mediaFor: item.media?.length ? index : undefined,
-        };
-    }),
-    ...right.map((entry, position) => ({ ...entry, side: 'right' as const, row: `${degreeRow + position}` })),
-];
-
+// Two chapters. Education first: a year rail
+// on the left that sticks beside each entry while it scrolls, with a fill line that tracks progress.
+// Then work: one feature card per role with its highlights open.
 export default function Journey() {
-    const timelineRef = useRef<HTMLDivElement>(null);
-    const { scrollYProgress } = useScroll({ target: timelineRef, offset: ['start 75%', 'end 60%'] });
+    const sectionRef = useRef<HTMLElement>(null);
+    const eduRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({ target: eduRef, offset: ['start 70%', 'end 55%'] });
     const fill = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.4 });
 
+    useGSAP(
+        () => {
+            const mm = gsap.matchMedia();
+            // Touch screens: the card in the middle of the screen is in focus.
+            mm.add(`${MOTION_OK} and (hover: none)`, () => {
+                gsap.utils.toArray<HTMLElement>(`.${styles.eduCard}, .${styles.workCard}`).forEach((card) => {
+                    ScrollTrigger.create({
+                        trigger: card,
+                        start: 'top 60%',
+                        end: 'bottom 40%',
+                        toggleClass: { targets: card, className: styles.cardFocus },
+                    });
+                });
+            });
+            mm.add(MOTION_OK, () => {
+                // Year dots power on as the fill line reaches them.
+                gsap.utils.toArray<HTMLElement>(`.${styles.dot}`).forEach((dot) => {
+                    ScrollTrigger.create({
+                        trigger: dot,
+                        start: 'top 60%',
+                        toggleClass: { targets: dot, className: styles.dotOn },
+                    });
+                });
+                gsap.utils.toArray<HTMLElement>(`.${styles.workCard}`).forEach((card) => {
+                    gsap.from(card.querySelectorAll(`.${styles.highlight}`), {
+                        y: 10,
+                        autoAlpha: 0,
+                        duration: 0.5,
+                        ease: 'expo.out',
+                        stagger: 0.06,
+                        scrollTrigger: { trigger: card, start: 'top 70%', once: true },
+                    });
+                });
+            });
+        },
+        { scope: sectionRef }
+    );
+
     return (
-        <section id="journey" className={styles.journey}>
+        <section id="journey" ref={sectionRef} className={styles.journey}>
             <div className={styles.container}>
-                <h2 className="section-title">Journey</h2>
+                <SectionHeading
+                    index="02"
+                    label="journey"
+                    title={<>From classroom to <em>production</em></>}
+                    lede="Where I studied, and where I work now."
+                />
 
-                <div ref={timelineRef} className={styles.timeline}>
-                    <span className={styles.spine} aria-hidden="true">
-                        <motion.span className={styles.spineFill} style={{ scaleY: fill }} />
-                    </span>
+                {/* Chapter 01: education */}
+                <div className={styles.chapter}>
+                    <div className={styles.chapterHead}>
+                        <span className={styles.chapterNo}>01</span>
+                        <p className={styles.chapterTitle}>Education</p>
+                        <span className={styles.chapterLine} aria-hidden="true" />
+                        <span className={styles.chapterCount}>
+                            {educationData.length} {educationData.length === 1 ? 'stop' : 'stops'}
+                        </span>
+                    </div>
 
-                    {entries.map((entry) => {
-                        const Icon = entry.icon;
-                        const fromLeft = entry.side === 'left';
+                    <div ref={eduRef} className={styles.eduWrap}>
+                        <span className={styles.rail} aria-hidden="true">
+                            <motion.span className={styles.railFill} style={{ scaleY: fill }} />
+                            <span className={styles.railPacket} />
+                        </span>
+                        <ol className={styles.eduList}>
+                        {educationData.map((item, index) => {
+                            const [title, badge] = item.degree.split(' - ');
+                            const years = yearsOf(item.period);
+                            const isDegree = Boolean(item.media?.length) || index === 0;
+                            const Icon = isDegree ? GraduationCap : School;
+                            return (
+                                <li key={item.degree} id={index === 0 ? 'education' : undefined} className={styles.eduRow}>
+                                    <div className={styles.yearCol} aria-hidden="true">
+                                        <div className={styles.yearSticky}>
+                                            <span className={styles.dot} />
+                                            <SplitReveal as="span" by="chars" className={styles.yearBig}>
+                                                {years[years.length - 1]}
+                                            </SplitReveal>
+                                            {years.length > 1 && <span className={styles.yearFrom}>from {years[0]}</span>}
+                                        </div>
+                                    </div>
+
+                                    <motion.article
+                                        className={styles.eduCard}
+                                        initial={{ opacity: 0, y: 24 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true, margin: '-80px' }}
+                                        transition={{ duration: 0.7, ease: EASE }}
+                                    >
+                                        <div className={styles.cardTop}>
+                                            <span className={styles.kind}>
+                                                <Icon size={14} aria-hidden="true" />
+                                                {isDegree ? 'education' : 'school'}
+                                            </span>
+                                            {badge && <span className={styles.badge}>{badge}</span>}
+                                        </div>
+                                        <h3 className={styles.eduTitle}>{title}</h3>
+                                        <p className={styles.org}>
+                                            {item.institution}
+                                            <span className={styles.period}>{item.period}</span>
+                                        </p>
+                                        {item.description && <p className={styles.lead}>{item.description}</p>}
+                                        {item.media?.length ? <EducationMedia eduIndex={index} /> : null}
+                                    </motion.article>
+                                </li>
+                            );
+                        })}
+                        </ol>
+                    </div>
+                </div>
+
+                {/* Chapter 02: work */}
+                <div className={styles.chapter}>
+                    <div className={styles.chapterHead}>
+                        <span className={styles.chapterNo}>02</span>
+                        <p className={styles.chapterTitle}>Work</p>
+                        <span className={styles.chapterLine} aria-hidden="true" />
+                        <span className={styles.chapterCount}>
+                            {experienceData.length} {experienceData.length === 1 ? 'role' : 'roles'}
+                        </span>
+                    </div>
+
+                    {experienceData.map((item, index) => {
+                        const current = item.period.includes('Present');
                         return (
                             <motion.article
-                                key={entry.key}
-                                id={entry.anchor}
-                                className={`${styles.entry} ${fromLeft ? styles.left : styles.right}`}
-                                style={{ '--row': entry.row } as React.CSSProperties}
-                                initial={{ opacity: 0, x: fromLeft ? -40 : 40 }}
-                                whileInView={{ opacity: 1, x: 0 }}
+                                key={item.role + item.company}
+                                id={index === 0 ? 'experience' : undefined}
+                                className={styles.workCard}
+                                initial={{ opacity: 0, y: 24 }}
+                                whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true, margin: '-80px' }}
-                                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                                transition={{ duration: 0.7, ease: EASE }}
                             >
-                                <span className={styles.yearAnchor}>
-                                    <motion.span
-                                        className={styles.year}
-                                        initial={{ scale: 0.6, opacity: 0 }}
-                                        whileInView={{ scale: 1, opacity: 1 }}
-                                        viewport={{ once: true, margin: '-120px' }}
-                                        transition={{ type: 'spring', stiffness: 380, damping: 22, delay: 0.15 }}
-                                    >
-                                        {yearOf(entry.period)}
-                                    </motion.span>
-                                </span>
-
-                                <div className={styles.card}>
+                                <div className={styles.workMain}>
                                     <div className={styles.cardTop}>
                                         <span className={styles.kind}>
-                                            <Icon size={14} aria-hidden="true" />
-                                            {entry.kind}
+                                            <Briefcase size={14} aria-hidden="true" />
+                                            work
                                         </span>
-                                        {entry.current && (
+                                        {current && (
                                             <span className={styles.now}>
                                                 <span className={styles.nowDot} />
                                                 now
                                             </span>
                                         )}
-                                        {entry.badge && <span className={styles.badge}>{entry.badge}</span>}
                                     </div>
-                                    <h3 className={styles.title}>{entry.title}</h3>
+                                    <h3 className={styles.workTitle}>{item.role}</h3>
                                     <p className={styles.org}>
-                                        {entry.org}
-                                        <span className={styles.period}>{entry.period}</span>
+                                        {item.company}
+                                        <span className={styles.period}>{item.period}</span>
                                     </p>
-                                    {entry.lead && <p className={styles.lead}>{entry.lead}</p>}
-                                    {entry.tags && (
+                                    {item.description && <p className={styles.lead}>{item.description}</p>}
+                                    {item.tags && (
                                         <ul className={styles.chips}>
-                                            {entry.tags.map((tag) => (
+                                            {item.tags.map((tag) => (
                                                 <li key={tag} className={styles.chip}>
                                                     {tag}
                                                 </li>
                                             ))}
                                         </ul>
                                     )}
-                                    {entry.highlights && (
-                                        <details className={styles.details}>
-                                            <summary className={styles.summary}>
-                                                {entry.highlights.length} highlights
-                                            </summary>
-                                            <ul className={styles.highlights}>
-                                                {entry.highlights.map((highlight, i) => (
-                                                    <li key={i}>{highlight}</li>
-                                                ))}
-                                            </ul>
-                                        </details>
-                                    )}
-                                    {entry.mediaFor !== undefined && <EducationMedia eduIndex={entry.mediaFor} />}
                                 </div>
+                                {item.highlights && (
+                                    <div className={styles.workSide}>
+                                        <p className={styles.sideLabel}>highlights</p>
+                                        <ol className={styles.highlights}>
+                                            {item.highlights.map((highlight, i) => (
+                                                <li key={i} className={styles.highlight}>
+                                                    <span className={styles.highlightNo} aria-hidden="true">
+                                                        {pad(i + 1)}
+                                                    </span>
+                                                    <span>{highlight}</span>
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    </div>
+                                )}
                             </motion.article>
                         );
                     })}

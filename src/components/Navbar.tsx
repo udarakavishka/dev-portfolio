@@ -3,15 +3,17 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AnimatePresence, motion, useScroll, useSpring } from 'motion/react';
 import { Menu, X, Moon, Sun } from 'lucide-react';
 import styles from './Navbar.module.css';
+import { scrollToTarget } from './motion/SmoothScroll';
 import { applyTheme, getTheme, toggleTheme as toggleThemeState, THEME_EVENT, type Theme } from '@/lib/theme';
 
 const navLinks = [
     { href: '#about', label: 'About' },
+    { href: '#journey', label: 'Journey' },
     { href: '#projects', label: 'Projects' },
     { href: '#research', label: 'Research' },
-    { href: '#journey', label: 'Journey' },
     { href: '/blog', label: 'Blog' },
     { href: '#contact', label: 'Contact' },
 ];
@@ -22,13 +24,16 @@ export default function Navbar() {
     const [theme, setTheme] = useState<'dark' | 'light'>('dark');
     const [scrolled, setScrolled] = useState(false);
     const [activeSection, setActiveSection] = useState('');
+    const { scrollYProgress } = useScroll();
+    const progress = useSpring(scrollYProgress, { stiffness: 200, damping: 40, mass: 0.3 });
 
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
         };
 
-        window.addEventListener('scroll', handleScroll);
+        handleScroll();
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -70,6 +75,15 @@ export default function Navbar() {
         return () => window.removeEventListener(THEME_EVENT, onThemeChange);
     }, []);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsOpen(false);
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [isOpen]);
+
     const toggleTheme = () => {
         setTheme(toggleThemeState());
     };
@@ -85,10 +99,7 @@ export default function Navbar() {
                 setIsOpen(false);
             } else {
                 // We're on home page, just scroll
-                const element = document.querySelector(href);
-                if (element) {
-                    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                    element.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+                if (scrollToTarget(href)) {
                     setIsOpen(false);
                 }
             }
@@ -98,61 +109,122 @@ export default function Navbar() {
         }
     };
 
+    const themeIcon = (
+        <AnimatePresence mode="popLayout" initial={false}>
+            <motion.span
+                key={theme}
+                className={styles.themeIcon}
+                initial={{ opacity: 0, scale: 0.6, rotate: -60, filter: 'blur(2px)' }}
+                animate={{ opacity: 1, scale: 1, rotate: 0, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, scale: 0.6, rotate: 60, filter: 'blur(2px)' }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+            >
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </motion.span>
+        </AnimatePresence>
+    );
+
     return (
-        <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
-            <div className={styles.container}>
-                <Link href="/" className={styles.logo}>
-                    <span className={styles.prompt}>$</span> udaradev.sh
-                </Link>
+        <>
+            <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ''}`}>
+                <div className={styles.bar}>
+                    <Link href="/" className={styles.logo}>
+                        <span className={styles.prompt}>$</span> udaradev.sh
+                    </Link>
 
-                <div className={styles.desktop}>
-                    {navLinks.map((link) => (
-                        <Link
-                            key={link.href}
-                            href={link.href}
-                            prefetch={false}
-                            className={`${styles.link} ${activeSection === link.href.slice(1) ? styles.active : ''}`}
-                            aria-current={activeSection === link.href.slice(1) ? 'location' : undefined}
-                            onClick={(e) => handleNavClick(e, link.href)}
+                    <div className={styles.desktop}>
+                        {navLinks.map((link) => {
+                            const active = activeSection === link.href.slice(1);
+                            return (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    prefetch={false}
+                                    className={`${styles.link} ${active ? styles.active : ''}`}
+                                    aria-current={active ? 'location' : undefined}
+                                    onClick={(e) => handleNavClick(e, link.href)}
+                                >
+                                    {active && (
+                                        <motion.span
+                                            layoutId="nav-pill"
+                                            className={styles.pill}
+                                            transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
+                                        />
+                                    )}
+                                    <span className={styles.linkLabel}>{link.label}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+
+                    <div className={styles.actions}>
+                        <button onClick={toggleTheme} className={styles.iconButton} aria-label="Toggle theme">
+                            {themeIcon}
+                        </button>
+                        <button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className={`${styles.iconButton} ${styles.menuButton}`}
+                            aria-label={isOpen ? 'Close menu' : 'Open menu'}
+                            aria-expanded={isOpen}
+                            aria-controls="mobile-menu"
                         >
-                            {link.label}
-                        </Link>
-                    ))}
-                    <button onClick={toggleTheme} className={styles.themeToggle} aria-label="Toggle theme">
-                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                    </button>
-                </div>
+                            {isOpen ? <X size={20} /> : <Menu size={20} />}
+                        </button>
+                    </div>
 
-                <div className={styles.mobile}>
-                    <button onClick={toggleTheme} className={styles.themeToggle} aria-label="Toggle theme">
-                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                    </button>
-                    <button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className={styles.menuButton}
-                        aria-label="Toggle menu"
-                    >
-                        {isOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
+                    <motion.span className={styles.progress} style={{ scaleX: progress }} aria-hidden="true" />
                 </div>
-            </div>
+            </nav>
 
-            {isOpen && (
-                <div className={styles.mobileMenu}>
-                    {navLinks.map((link) => (
-                        <Link
-                            key={link.href}
-                            href={link.href}
-                            prefetch={false}
-                            className={`${styles.mobileLink} ${activeSection === link.href.slice(1) ? styles.active : ''}`}
-                            aria-current={activeSection === link.href.slice(1) ? 'location' : undefined}
-                            onClick={(e) => handleNavClick(e, link.href)}
+            <AnimatePresence>
+                {isOpen && (
+                    <>
+                        <motion.div
+                            key="scrim"
+                            className={styles.scrim}
+                            onClick={() => setIsOpen(false)}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                            transition={{ duration: 0.25 }}
+                        />
+                        <motion.div
+                            key="sheet"
+                            id="mobile-menu"
+                            className={styles.mobileMenu}
+                            initial={{ opacity: 0, y: -16, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -12, scale: 0.98, transition: { duration: 0.18 } }}
+                            transition={{ type: 'spring', bounce: 0, duration: 0.35 }}
                         >
-                            {link.label}
-                        </Link>
-                    ))}
-                </div>
-            )}
-        </nav>
+                            {navLinks.map((link, index) => {
+                                const active = activeSection === link.href.slice(1);
+                                return (
+                                    <motion.span
+                                        key={link.href}
+                                        initial={{ opacity: 0, y: -6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.03 + index * 0.03, duration: 0.25 }}
+                                    >
+                                        <Link
+                                            href={link.href}
+                                            prefetch={false}
+                                            className={`${styles.mobileLink} ${active ? styles.active : ''}`}
+                                            aria-current={active ? 'location' : undefined}
+                                            onClick={(e) => handleNavClick(e, link.href)}
+                                        >
+                                            <span className={styles.mobileIndex} aria-hidden="true">
+                                                {String(index + 1).padStart(2, '0')}
+                                            </span>
+                                            {link.label}
+                                        </Link>
+                                    </motion.span>
+                                );
+                            })}
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </>
     );
 }

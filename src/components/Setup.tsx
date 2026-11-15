@@ -1,8 +1,11 @@
 'use client';
 
-import { motion, type Variants } from 'framer-motion';
+import { useRef } from 'react';
+import { motion, type Variants } from 'motion/react';
 import styles from './Setup.module.css';
 import { setupData } from '@/data/content';
+import SectionHeading from './motion/SectionHeading';
+import { gsap, useGSAP, MOTION_OK } from '@/lib/gsap';
 
 // Arch logo as neofetch prints it (Omarchy is Arch based).
 const LOGO = String.raw`                   -${'`'}
@@ -62,6 +65,24 @@ function Command({ text, delay }: { text: string; delay: number }) {
 }
 
 export default function Setup() {
+    const sectionRef = useRef<HTMLElement>(null);
+
+    // The terminal settles in once; neofetch then prints into it.
+    useGSAP(
+        () => {
+            const mm = gsap.matchMedia();
+            mm.add(MOTION_OK, () => {
+                gsap.from(`.${styles.stage}`, {
+                    y: 24,
+                    autoAlpha: 0,
+                    duration: 0.7,
+                    ease: 'expo.out',
+                    scrollTrigger: { trigger: `.${styles.stage}`, start: 'top 85%', once: true },
+                });
+            });
+        },
+        { scope: sectionRef }
+    );
     const [hardware, tools, apps] = setupData;
     const specs = [...hardware.items, ...tools.items];
     const infoStart = 0.7;
@@ -70,9 +91,15 @@ export default function Setup() {
     const promptStart = appsStart + apps.items.length * 0.06 + 0.4;
 
     return (
-        <section id="setup" className={styles.setup}>
+        <section id="setup" ref={sectionRef} className={styles.setup}>
             <div className={styles.container}>
-                <h2 className="section-title">My Setup</h2>
+                <SectionHeading
+                    index="08"
+                    label="setup"
+                    title={<>Where the work <em>happens</em></>}
+                    lede="The machine, the editor and the apps I live in every day."
+                />
+                <div className={styles.stage}>
                 <motion.div
                     className={styles.window}
                     initial="hidden"
@@ -144,6 +171,7 @@ export default function Setup() {
                         </motion.p>
                     </div>
                 </motion.div>
+                </div>
             </div>
         </section>
     );

@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Cloudflare (OpenNext / wrangler) build output.
+    ".open-next/**",
+    ".wrangler/**",
     // Keep the Sanity studio linting isolated to its own config.
     "portfolio-studio/**",
   ]),

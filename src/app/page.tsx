@@ -53,10 +53,10 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <Projects />
-        <Research />
-        <Skills />
         <Journey />
+        <Projects />
+        <Skills />
+        <Research />
         <Clubs />
         <HomeBlog posts={posts.slice(0, 5)} />
         <Setup />

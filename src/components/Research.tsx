@@ -3,83 +3,132 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, FlaskConical } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import styles from './Research.module.css';
-import { researchData } from '@/data/content';
+import { heroData, researchData } from '@/data/content';
+import SectionHeading from './motion/SectionHeading';
+import { gsap, useGSAP, ScrollTrigger, MOTION_OK } from '@/lib/gsap';
 
+// Each research entry is laid out like the first page of a paper: header, byline, rule,
+// numbered contributions and keywords on the left, the cover as Figure 1 on the right.
 export default function Research() {
     const sectionRef = useRef<HTMLElement>(null);
-    const reduceMotion = useReducedMotion();
-    // Cover drifts up and settles from a slight zoom while the section scrolls through the viewport
-    const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
-    const coverY = useTransform(scrollYProgress, [0, 1], [40, -40]);
-    const coverScale = useTransform(scrollYProgress, [0, 0.5, 1], [1.08, 1, 1.04]);
+
+    useGSAP(
+        () => {
+            const mm = gsap.matchMedia();
+            // Touch screens: the paper in the middle of the screen gets the hover look.
+            mm.add(`${MOTION_OK} and (hover: none)`, () => {
+                gsap.utils.toArray<HTMLElement>(`.${styles.paper}`).forEach((paper) => {
+                    ScrollTrigger.create({
+                        trigger: paper,
+                        start: 'top 55%',
+                        end: 'bottom 45%',
+                        toggleClass: { targets: paper, className: styles.paperFocus },
+                    });
+                });
+            });
+            mm.add(MOTION_OK, () => {
+                gsap.utils.toArray<HTMLElement>(`.${styles.paper}`).forEach((paper) => {
+                    const tl = gsap.timeline({
+                        defaults: { ease: 'expo.out' },
+                        scrollTrigger: { trigger: paper, start: 'top 85%', once: true },
+                    });
+                    tl.from(paper, { y: 24, autoAlpha: 0, duration: 0.7 })
+                        .from(paper.querySelector(`.${styles.rule}`), { scaleX: 0, duration: 0.9, ease: 'expo.inOut' }, 0.15)
+                        .from(paper.querySelectorAll(`.${styles.finding}`), { y: 10, autoAlpha: 0, stagger: 0.06, duration: 0.5 }, 0.3)
+                        .from(paper.querySelector(`.${styles.figureFrame}`), { autoAlpha: 0, duration: 0.6 }, 0.3);
+                });
+            });
+        },
+        { scope: sectionRef }
+    );
 
     return (
         <section id="research" ref={sectionRef} className={styles.research}>
             <div className={styles.container}>
-                <h2 className="section-title">Research</h2>
+                <SectionHeading
+                    index="05"
+                    label="research"
+                    title={<>Teaching autoscalers to <em>see load coming</em></>}
+                    lede="Undergraduate research: forecasting CPU demand with hybrid neural networks so Kubernetes scales before the spike, not after it."
+                />
                 <div className={styles.list}>
-                    {researchData.map((item, index) => (
-                        <motion.article
-                            key={item.slug}
-                            className={styles.tile}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: '-80px' }}
-                            transition={{ delay: index * 0.06, duration: 0.45 }}
-                        >
-                            <div className={styles.cover}>
-                                <motion.div
-                                    className={styles.coverMotion}
-                                    style={reduceMotion ? undefined : { y: coverY, scale: coverScale }}
-                                >
-                                    <Image
-                                        src={item.cover}
-                                        alt=""
-                                        width={1294}
-                                        height={1130}
-                                        sizes="(max-width: 860px) 100vw, 640px"
-                                        className={styles.coverImage}
-                                    />
-                                </motion.div>
-                            </div>
-                            <div className={styles.body}>
-                                <span className={styles.kind}>
-                                    <FlaskConical size={14} aria-hidden="true" />
-                                    {item.title}
-                                </span>
+                    {researchData.map((item) => (
+                        <article key={item.slug} className={styles.paper}>
+                            <header className={styles.header}>
+                                <div className={styles.meta}>
+                                    <span className={styles.kind}>{item.title}</span>
+                                    <span className={styles.period}>{item.period}</span>
+                                </div>
                                 <h3 className={styles.title}>
-                                    {/* Stretched over the whole tile so any click opens the research page */}
+                                    {/* Stretched over the whole paper so any click opens the research page */}
                                     <Link href={`/research/${item.slug}`} className={styles.titleLink}>
                                         {item.focus}
                                     </Link>
                                 </h3>
-                                <p className={styles.org}>
-                                    {item.institution}
-                                    <span className={styles.period}>{item.period}</span>
+                                <p className={styles.byline}>
+                                    <span className={styles.author}>{heroData.name}</span>
+                                    <span className={styles.institution}>{item.institution}</span>
                                 </p>
-                                <ul className={styles.highlights}>
-                                    {item.highlights.map((highlight) => (
-                                        <li key={highlight}>{highlight}</li>
-                                    ))}
-                                </ul>
-                                {item.tags && (
-                                    <ul className={styles.techStack}>
-                                        {item.tags.map((tag) => (
-                                            <li key={tag} className={styles.techBadge}>
-                                                {tag}
+                                <span className={styles.rule} aria-hidden="true" />
+                            </header>
+
+                            <div className={styles.columns}>
+                                <div className={styles.text}>
+                                    <p className={styles.label}>Contributions</p>
+                                    <ol className={styles.findings}>
+                                        {item.highlights.map((highlight, index) => (
+                                            <li key={highlight} className={styles.finding}>
+                                                <span className={styles.cite} aria-hidden="true">
+                                                    [{index + 1}]
+                                                </span>
+                                                <span>{highlight}</span>
                                             </li>
                                         ))}
-                                    </ul>
-                                )}
+                                    </ol>
+                                    {item.tags && (
+                                        <div className={styles.keywords}>
+                                            <p className={styles.label}>Keywords</p>
+                                            <ul className={styles.keywordList}>
+                                                {item.tags.map((tag) => (
+                                                    <li key={tag} className={styles.keyword}>
+                                                        {tag}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <figure className={styles.figure}>
+                                    <div className={styles.figureFrame}>
+                                        <span className={styles.sweep} aria-hidden="true" />
+                                        <Image
+                                            src={item.cover}
+                                            alt=""
+                                            width={1294}
+                                            height={1130}
+                                            sizes="(max-width: 860px) 100vw, 520px"
+                                            className={styles.figureImage}
+                                        />
+                                    </div>
+                                    <figcaption className={styles.caption}>
+                                        <span className={styles.figLabel}>Fig. 1</span> {item.title}
+                                    </figcaption>
+                                </figure>
+                            </div>
+
+                            <footer className={styles.footer}>
+                                <span className={styles.path} aria-hidden="true">
+                                    udaradev.me/research/{item.slug}
+                                </span>
                                 <span className={styles.more} aria-hidden="true">
                                     Read the research
                                     <ArrowRight size={16} />
                                 </span>
-                            </div>
-                        </motion.article>
+                            </footer>
+                        </article>
                     ))}
                 </div>
             </div>

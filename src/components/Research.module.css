@@ -1,5 +1,5 @@
 .research {
-    padding: 6rem 1rem;
+    padding: clamp(5rem, 10vw, 8rem) 1rem;
     background-color: var(--bg-primary);
 }
 
@@ -10,133 +10,126 @@
 
 .list {
     display: grid;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
-/* Same tile surface as Featured Projects: border, hover lift and accent glow */
-.tile {
+/* A paper's first page: soft sheet with a faint ruled background */
+.paper {
     position: relative;
-    display: flex;
-    min-width: 0;
+    isolation: isolate;
     overflow: hidden;
+    padding: clamp(1.5rem, 4vw, 3.25rem);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    background-color: var(--bg-secondary);
-    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    border-radius: 28px;
+    background:
+        repeating-linear-gradient(
+            180deg,
+            transparent 0,
+            transparent 31px,
+            color-mix(in srgb, var(--text-muted) 7%, transparent) 31px,
+            color-mix(in srgb, var(--text-muted) 7%, transparent) 32px
+        ),
+        linear-gradient(180deg, color-mix(in srgb, var(--bg-tertiary) 50%, transparent), transparent 40%),
+        var(--bg-secondary);
+    box-shadow: inset 0 1px 0 var(--surface-glass-edge), var(--shadow-2);
+    transition: border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
-.tile:hover {
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--accent-primary) 60%, var(--border-color));
-    box-shadow: 0 18px 40px -26px color-mix(in srgb, var(--accent-primary) 55%, transparent);
-}
-
-.cover {
-    position: relative;
-    flex: 0 0 54%;
-    display: flex;
-    align-items: stretch;
-    overflow: hidden;
-    border-right: 1px solid var(--border-color);
-    background-color: #0a0a0a;
-}
-
-/* Shine that sweeps across the cover on hover */
-.cover::after {
+/* Folded top-right corner */
+.paper::before {
     content: '';
     position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        105deg,
-        transparent 35%,
-        color-mix(in srgb, var(--accent-primary) 14%, transparent) 50%,
-        transparent 65%
-    );
-    transform: translateX(-110%);
-    pointer-events: none;
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(225deg, var(--bg-primary) 50%, color-mix(in srgb, var(--bg-tertiary) 90%, var(--text-muted)) 50%);
+    border-bottom-left-radius: 10px;
+    box-shadow: -3px 3px 8px -4px rgba(0, 0, 0, 0.4);
+    transition: width 0.4s var(--ease-out), height 0.4s var(--ease-out);
 }
 
-.tile:hover .cover::after {
-    transition: transform 0.9s ease;
-    transform: translateX(110%);
+/* Touch: focused paper mirrors the hover look */
+.paperFocus {
+    border-color: color-mix(in srgb, var(--accent-primary) 40%, var(--border-color));
+    box-shadow:
+        inset 0 1px 0 var(--surface-glass-edge),
+        0 40px 80px -36px color-mix(in srgb, var(--accent-primary) 40%, transparent);
 }
 
-/* Parallax wrapper: framer-motion drives its y and scale from the scroll position */
-.coverMotion {
-    width: 100%;
-    height: 100%;
-    will-change: transform;
+.paperFocus::before {
+    width: 60px;
+    height: 60px;
 }
 
-/* card.png matches the desktop box (647x565); narrower boxes letterbox on the same dark background */
-.coverImage {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    animation: coverGlow 4s ease-in-out infinite;
-    transition: transform 0.6s ease;
+.paperFocus .more svg {
+    transform: translateX(4px);
 }
 
-.tile:hover .coverImage {
-    transform: scale(1.04);
+.paperFocus .figureImage {
+    transform: scale(1.03);
 }
 
-@keyframes coverGlow {
-    0%,
-    100% {
-        filter: drop-shadow(0 0 0 transparent);
+@media (hover: hover) and (pointer: fine) {
+    .paper:hover {
+        border-color: color-mix(in srgb, var(--accent-primary) 40%, var(--border-color));
+        box-shadow:
+            inset 0 1px 0 var(--surface-glass-edge),
+            0 40px 80px -36px color-mix(in srgb, var(--accent-primary) 40%, transparent);
     }
 
-    50% {
-        filter: drop-shadow(0 0 18px color-mix(in srgb, var(--accent-primary) 35%, transparent));
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .coverImage {
-        animation: none;
-        transition: none;
+    .paper:hover::before {
+        width: 60px;
+        height: 60px;
     }
 
-    .tile:hover .coverImage {
-        transform: none;
+    .paper:hover .more svg {
+        transform: translateX(4px);
     }
 
-    .cover::after {
-        display: none;
+    .paper:hover .figureImage {
+        transform: scale(1.03);
     }
 }
 
-.body {
+.header {
+    max-width: 52rem;
+}
+
+.meta {
     display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-width: 0;
-    padding: 1.5rem 1.6rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-bottom: 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
 }
 
 .kind {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin-bottom: 0.8rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.04em;
+    color: var(--accent-primary);
+}
+
+.period {
     color: var(--text-muted);
 }
 
-.kind svg {
-    color: var(--accent-primary);
+.period::before {
+    content: '·';
+    margin-right: 1rem;
 }
 
 .title {
-    margin-bottom: 0.6rem;
-    font-family: var(--font-mono);
-    font-size: 1.25rem;
-    line-height: 1.35;
-    color: var(--accent-primary);
+    margin-bottom: 1rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+    font-weight: 650;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    text-wrap: balance;
 }
 
 .titleLink {
@@ -147,40 +140,91 @@
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 1;
 }
 
-.org {
+.titleLink:focus-visible {
+    outline: none;
+}
+
+.paper:has(.titleLink:focus-visible) {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 3px;
+}
+
+.byline {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem 0.75rem;
-    margin-bottom: 1rem;
-    font-size: 0.82rem;
+    gap: 0.25rem 0.9rem;
+    font-size: 0.92rem;
     color: var(--text-secondary);
 }
 
-.period {
+.author {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.institution {
+    font-style: italic;
+}
+
+.rule {
+    display: block;
+    height: 1px;
+    margin: clamp(1.5rem, 3vw, 2.25rem) 0;
+    background: linear-gradient(90deg, var(--accent-primary), var(--border-color) 30%, var(--border-color) 80%, transparent);
+    transform-origin: left;
+}
+
+.columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    align-items: start;
+}
+
+.label {
+    margin-bottom: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     color: var(--text-muted);
 }
 
-.highlights {
+.findings {
     display: grid;
-    gap: 0.5rem;
-    margin-bottom: 1.1rem;
-    padding-left: 1.1rem;
-    font-size: 0.86rem;
-    line-height: 1.6;
-    color: var(--text-secondary);
-}
-
-.techStack {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 1.1rem;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
     list-style: none;
 }
 
-.techBadge {
+.finding {
+    display: grid;
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+    gap: 0.25rem;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    text-wrap: pretty;
+}
+
+.cite {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.95;
+    color: var(--accent-primary);
+}
+
+.keywordList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+}
+
+.keyword {
     padding: 0.3rem 0.65rem;
     border: 1px solid var(--border-color);
     border-radius: 999px;
@@ -188,37 +232,99 @@
     font-family: var(--font-mono);
     font-size: 0.72rem;
     color: var(--text-secondary);
-    transition: border-color 0.2s ease;
 }
 
-.tile:hover .techBadge {
-    border-color: color-mix(in srgb, var(--accent-primary) 40%, var(--border-color));
+.figure {
+    margin: 0;
+}
+
+.figureFrame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background-color: #0a0a0a;
+}
+
+/* A soft band that passes over the chart every few seconds, like a live dashboard refreshing */
+.sweep {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 1;
+    width: 30%;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-primary) 14%, transparent), transparent);
+    transform: translateX(-100%);
+    animation: sweep 6s var(--ease-in-out) 1.5s infinite;
+    pointer-events: none;
+}
+
+@keyframes sweep {
+    0% {
+        transform: translateX(-100%);
+    }
+    55%,
+    100% {
+        transform: translateX(340%);
+    }
+}
+
+.figureImage {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 0.9s var(--ease-out);
+}
+
+.caption {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+.figLabel {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-top: clamp(1.75rem, 3vw, 2.5rem);
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+.path {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
 }
 
 .more {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin-top: auto;
     font-family: var(--font-mono);
     font-size: 0.88rem;
     color: var(--accent-tertiary);
-    transition: gap 0.2s ease;
 }
 
-.tile:hover .more {
-    gap: 0.75rem;
+.more svg {
+    transition: transform 0.3s var(--ease-out);
 }
 
 @media (max-width: 860px) {
-    .tile {
-        flex-direction: column;
+    .columns {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    .cover {
-        flex: none;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
+    .figure {
+        order: -1;
     }
 }
 
@@ -227,7 +333,25 @@
         padding: 4rem 1rem;
     }
 
-    .body {
-        padding: 1.25rem 1.35rem 1.35rem;
+    /* Kind and period stack instead of wrapping with a stray separator */
+    .meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .period::before {
+        display: none;
+    }
+
+    .finding {
+        grid-template-columns: 2rem minmax(0, 1fr);
+        font-size: 0.9rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .figureImage {
+        transition: none;
     }
 }

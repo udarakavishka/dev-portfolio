@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'motion/react';
 import { Check, CornerDownLeft, Loader2, RotateCcw, X, type LucideIcon } from 'lucide-react';
 import styles from './Contact.module.css';
 import { contactData } from '@/data/content';
 
-const HEADLINE = ["LET'S BUILD", 'SOMETHING'];
+const HEADLINE = ["Let's build", 'something'];
 const STEPS = ['validate input', 'build payload', 'deploy to inbox', 'deliver message'];
 const FIELDS = [
     { name: 'name', label: 'Name', placeholder: '"your name"' },
@@ -146,7 +146,9 @@ export default function Contact() {
     return (
         <section id="contact" className={styles.contact}>
             <div className={styles.container}>
-                <h2 className="section-title">Contact</h2>
+                <h2 className="section-eyebrow">
+                    <span aria-hidden="true">&gt; 09 /</span> contact
+                </h2>
 
                 <motion.p
                     className={styles.headline}
@@ -154,7 +156,7 @@ export default function Contact() {
                     initial="hidden"
                     whileInView="show"
                     viewport={{ once: true, margin: '-80px' }}
-                    transition={{ staggerChildren: 0.035 }}
+                    transition={{ staggerChildren: 0.03 }}
                 >
                     {HEADLINE.map((line, lineIndex) => (
                         <span key={line} className={styles.headlineLine} aria-hidden="true">
@@ -166,7 +168,7 @@ export default function Contact() {
                                         hidden: { y: '110%', opacity: 0 },
                                         show: { y: 0, opacity: 1 },
                                     }}
-                                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                    transition={{ duration: 0.9, ease: [0.23, 1, 0.32, 1] }}
                                 >
                                     {char === ' ' ? ' ' : char}
                                 </motion.span>
@@ -179,10 +181,10 @@ export default function Contact() {
                 <div className={styles.layout}>
                     <motion.div
                         className={styles.terminal}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, y: 40, scale: 0.97 }}
+                        whileInView={{ opacity: 1, y: 0, scale: 1 }}
                         viewport={{ once: true, margin: '-80px' }}
-                        transition={{ duration: 0.5, delay: 0.15 }}
+                        transition={{ duration: 0.9, delay: 0.15, ease: [0.23, 1, 0.32, 1] }}
                     >
                         <div className={styles.titleBar}>
                             <span className={styles.dots} aria-hidden="true">
@@ -201,9 +203,9 @@ export default function Contact() {
                                     onSubmit={handleSubmit}
                                     onKeyDown={handleKeyDown}
                                     className={styles.form}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
+                                    initial={{ opacity: 0, filter: 'blur(4px)' }}
+                                    animate={{ opacity: 1, filter: 'blur(0px)' }}
+                                    exit={{ opacity: 0, filter: 'blur(4px)' }}
                                     transition={{ duration: 0.2 }}
                                 >
                                     <p className={styles.command}>
@@ -266,9 +268,9 @@ export default function Contact() {
                                     className={styles.pipeline}
                                     role="status"
                                     aria-live="polite"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
+                                    initial={{ opacity: 0, filter: 'blur(4px)' }}
+                                    animate={{ opacity: 1, filter: 'blur(0px)' }}
+                                    exit={{ opacity: 0, filter: 'blur(4px)' }}
                                     transition={{ duration: 0.2 }}
                                 >
                                     <p className={styles.command}>
@@ -278,7 +280,7 @@ export default function Contact() {
                                         <motion.span
                                             className={`${styles.progressBar} ${stage === 'failed' ? styles.progressFailed : ''}`}
                                             animate={{ scaleX: stage === 'failed' ? 1 : progress }}
-                                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                                            transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
                                         />
                                     </div>
                                     <ol className={styles.steps}>
@@ -344,20 +346,34 @@ export default function Contact() {
 
                     <motion.div
                         className={styles.aside}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, y: 40, filter: 'blur(6px)' }}
+                        whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                         viewport={{ once: true, margin: '-80px' }}
-                        transition={{ duration: 0.5, delay: 0.25 }}
+                        transition={{ duration: 0.9, delay: 0.28, ease: [0.23, 1, 0.32, 1] }}
                     >
                         <p className={styles.asideText}>
                             I&apos;m always open to discussing new projects, creative ideas, or opportunities to be part
                             of your vision. Send a message, or find me here:
                         </p>
-                        <div className={styles.socialLinks}>
+                        <motion.div
+                            className={styles.socialLinks}
+                            initial="hidden"
+                            whileInView="show"
+                            viewport={{ once: true, margin: '-60px' }}
+                            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
+                        >
                             {socialLinks.map((social) => (
-                                <MagneticLink key={social.label} href={social.href} label={social.label} Icon={social.icon} />
+                                <motion.div
+                                    key={social.label}
+                                    variants={{
+                                        hidden: { opacity: 0, y: 16 },
+                                        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] } },
+                                    }}
+                                >
+                                    <MagneticLink href={social.href} label={social.label} Icon={social.icon} />
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
                     </motion.div>
                 </div>
             </div>
