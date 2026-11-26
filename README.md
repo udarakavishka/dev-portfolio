@@ -174,7 +174,10 @@ npm run lint         # Run ESLint
 
 The site runs on [Cloudflare Workers](https://workers.cloudflare.com) through [OpenNext](https://opennext.js.org/cloudflare) and is live at [udaradev.me](https://udaradev.me).
 
-- **Automatic:** every push to `main` runs the GitHub Actions workflow in `.github/workflows/ci.yml` (lint, type-check, build), then deploys with `npx opennextjs-cloudflare deploy`. It needs the repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+- **Automatic:** the GitHub Actions workflow in `.github/workflows/ci.yml` lints, type-checks and builds every pull request and push to `main`.
+  - **Pull requests** upload a preview version of the Worker (alias `pr-<number>`) and post its URL as a PR comment. Production is not touched.
+  - **Pushes to `main`** deploy to production with `npx opennextjs-cloudflare deploy`.
+  - Needs the repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 - **Manual:** `npm run deploy` builds and deploys from your machine (`npx wrangler login` first).
 - **Preview locally on the Workers runtime:** `npm run preview`.
 
