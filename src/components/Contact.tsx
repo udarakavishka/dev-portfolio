@@ -1,107 +1,50 @@
 'use client';
 
 import { useState } from 'react';
-import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from 'motion/react';
-import { Check, CornerDownLeft, Loader2, RotateCcw, X, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, Check, Loader2, RotateCcw } from 'lucide-react';
 import styles from './Contact.module.css';
 import { contactData } from '@/data/content';
 
-const HEADLINE = ["Let's build", 'something'];
-const STEPS = ['validate input', 'build payload', 'deploy to inbox', 'deliver message'];
 const FIELDS = [
-    { name: 'name', label: 'Name', placeholder: '"your name"' },
-    { name: 'email', label: 'Email', placeholder: '"you@example.com"' },
-    { name: 'message', label: 'Message', placeholder: '"hi Udara, …"' },
+    { name: 'name', label: 'Name', placeholder: 'Your name' },
+    { name: 'email', label: 'Email', placeholder: 'you@example.com' },
+    { name: 'message', label: 'Message', placeholder: 'Hi Udara, …' },
 ] as const;
 
 type FieldName = (typeof FIELDS)[number]['name'];
 type Stage = 'idle' | 'running' | 'done' | 'failed';
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Social button that drifts toward the pointer and springs back when it leaves.
-function MagneticLink({ href, label, Icon }: { href: string; label: string; Icon: LucideIcon }) {
-    const reduceMotion = useReducedMotion();
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
-    const springX = useSpring(x, { stiffness: 300, damping: 18, mass: 0.5 });
-    const springY = useSpring(y, { stiffness: 300, damping: 18, mass: 0.5 });
-
-    const handleMove = (e: React.PointerEvent<HTMLAnchorElement>) => {
-        if (reduceMotion || e.pointerType !== 'mouse') return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        x.set((e.clientX - (rect.left + rect.width / 2)) * 0.35);
-        y.set((e.clientY - (rect.top + rect.height / 2)) * 0.35);
-    };
-
-    const reset = () => {
-        x.set(0);
-        y.set(0);
-    };
-
-    return (
-        <motion.a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={label}
-            className={styles.socialLink}
-            style={{ x: springX, y: springY }}
-            onPointerMove={handleMove}
-            onPointerLeave={reset}
-            whileTap={{ scale: 0.94 }}
-        >
-            <Icon size={20} aria-hidden="true" />
-            <span>{label}</span>
-        </motion.a>
-    );
-}
+const EMAIL = 'hello@udaradev.me';
 
 export default function Contact() {
-    const reduceMotion = useReducedMotion();
     const [formData, setFormData] = useState<Record<FieldName, string>>({ name: '', email: '', message: '' });
     const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
     const [stage, setStage] = useState<Stage>('idle');
-    const [completed, setCompleted] = useState(0);
 
     const validateForm = () => {
         const newErrors: Partial<Record<FieldName, string>> = {};
-
-        if (!formData.name.trim()) {
-            newErrors.name = 'Name is required';
-        }
-
+        if (!formData.name.trim()) newErrors.name = 'Name is required';
         if (!formData.email.trim()) {
             newErrors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = 'Invalid email format';
         }
-
-        if (!formData.message.trim()) {
-            newErrors.message = 'Message is required';
-        }
-
+        if (!formData.message.trim()) newErrors.message = 'Message is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
-
+        if (stage === 'running' || !validateForm()) return;
         setStage('running');
-        setCompleted(0);
 
-        // The request runs while the pipeline animates; the last step waits for its result.
-        const request = fetch('https://formspree.io/f/xdkaqqnv', {
+        const ok = await fetch('https://formspree.io/f/xdkaqqnv', {
             method: 'POST',
             body: JSON.stringify(formData),
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
+                Accept: 'application/json',
             },
         })
             .then((response) => response.ok)
@@ -110,13 +53,7 @@ export default function Contact() {
                 return false;
             });
 
-        for (let step = 1; step < STEPS.length; step++) {
-            await wait(reduceMotion ? 0 : 550);
-            setCompleted(step);
-        }
-
-        if (await request) {
-            setCompleted(STEPS.length);
+        if (ok) {
             setStage('done');
             setFormData({ name: '', email: '', message: '' });
         } else {
@@ -127,12 +64,11 @@ export default function Contact() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const name = e.target.name as FieldName;
         setFormData((prev) => ({ ...prev, [name]: e.target.value }));
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: '' }));
-        }
+        if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
+        if (stage === 'done' || stage === 'failed') setStage('idle');
     };
 
-    // Ctrl/Cmd + Enter sends from anywhere in the form, like running the command.
+    // Ctrl/Cmd + Enter sends from anywhere in the form.
     const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
             e.preventDefault();
@@ -140,242 +76,115 @@ export default function Contact() {
         }
     };
 
-    const { socialLinks } = contactData;
-    const progress = completed / STEPS.length;
+    const socials = contactData.socialLinks.filter((link) => link.label !== 'Email');
 
     return (
-        <section id="contact" className={styles.contact}>
-            <div className={styles.container}>
-                <h2 className="section-eyebrow">
-                    <span aria-hidden="true">&gt; 09 /</span> contact
+        <section id="contact" className={`${styles.contact} frame`}>
+            <div className={styles.top}>
+                <h2 className={styles.headline}>
+                    <span className={styles.lineOne} data-reveal>
+                        Let&apos;s build
+                        <ArrowUpRight className={styles.bigArrow} aria-hidden="true" />
+                    </span>
+                    <span className={styles.lineTwo} data-reveal style={{ '--i': 2 } as React.CSSProperties}>Something real.</span>
                 </h2>
 
-                <motion.p
-                    className={styles.headline}
-                    aria-label="Let's build something"
-                    initial="hidden"
-                    whileInView="show"
-                    viewport={{ once: true, margin: '-80px' }}
-                    transition={{ staggerChildren: 0.03 }}
-                >
-                    {HEADLINE.map((line, lineIndex) => (
-                        <span key={line} className={styles.headlineLine} aria-hidden="true">
-                            {Array.from(line).map((char, charIndex) => (
-                                <motion.span
-                                    key={charIndex}
-                                    className={styles.char}
-                                    variants={{
-                                        hidden: { y: '110%', opacity: 0 },
-                                        show: { y: 0, opacity: 1 },
-                                    }}
-                                    transition={{ duration: 0.9, ease: [0.23, 1, 0.32, 1] }}
-                                >
-                                    {char === ' ' ? ' ' : char}
-                                </motion.span>
+                <div className={styles.info} data-reveal style={{ '--i': 3 } as React.CSSProperties}>
+                    <div className={styles.infoBlock}>
+                        <p className={styles.infoLabel}>Contact</p>
+                        <a href={`mailto:${EMAIL}`} className={styles.infoLink}>
+                            {EMAIL}
+                        </a>
+                        <p className={styles.infoNote}>Colombo, Sri Lanka · UTC+5:30</p>
+                    </div>
+                    <div className={styles.infoBlock}>
+                        <p className={styles.infoLabel}>Follow</p>
+                        <ul className={styles.socials}>
+                            {socials.map((link) => (
+                                <li key={link.label}>
+                                    <a href={link.href} target="_blank" rel="noopener noreferrer" className={styles.infoLink}>
+                                        <link.icon size={15} aria-hidden="true" />
+                                        {link.label}
+                                    </a>
+                                </li>
                             ))}
-                            {lineIndex === HEADLINE.length - 1 && <span className={styles.cursor} />}
-                        </span>
-                    ))}
-                </motion.p>
-
-                <div className={styles.layout}>
-                    <motion.div
-                        className={styles.terminal}
-                        initial={{ opacity: 0, y: 40, scale: 0.97 }}
-                        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                        viewport={{ once: true, margin: '-80px' }}
-                        transition={{ duration: 0.9, delay: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                    >
-                        <div className={styles.titleBar}>
-                            <span className={styles.dots} aria-hidden="true">
-                                <span />
-                                <span />
-                                <span />
-                            </span>
-                            <span className={styles.windowTitle}>~/contact</span>
-                        </div>
-
-                        <AnimatePresence mode="wait" initial={false}>
-                            {stage === 'idle' ? (
-                                <motion.form
-                                    key="form"
-                                    noValidate
-                                    onSubmit={handleSubmit}
-                                    onKeyDown={handleKeyDown}
-                                    className={styles.form}
-                                    initial={{ opacity: 0, filter: 'blur(4px)' }}
-                                    animate={{ opacity: 1, filter: 'blur(0px)' }}
-                                    exit={{ opacity: 0, filter: 'blur(4px)' }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    <p className={styles.command}>
-                                        <span className={styles.prompt} aria-hidden="true">$</span> send-message \
-                                    </p>
-
-                                    {FIELDS.map((field) => (
-                                        <div key={field.name} className={styles.fieldWrap}>
-                                            <div className={`${styles.field} ${errors[field.name] ? styles.fieldError : ''}`}>
-                                                <label htmlFor={field.name} className={styles.flag}>
-                                                    <span aria-hidden="true">--{field.name}</span>
-                                                    <span className={styles.visuallyHidden}>{field.label}</span>
-                                                </label>
-                                                {field.name === 'message' ? (
-                                                    <textarea
-                                                        id={field.name}
-                                                        name={field.name}
-                                                        value={formData[field.name]}
-                                                        onChange={handleChange}
-                                                        className={styles.input}
-                                                        placeholder={field.placeholder}
-                                                        rows={4}
-                                                        aria-invalid={Boolean(errors[field.name])}
-                                                        aria-describedby={errors[field.name] ? `${field.name}-error` : undefined}
-                                                    />
-                                                ) : (
-                                                    <input
-                                                        type={field.name === 'email' ? 'email' : 'text'}
-                                                        id={field.name}
-                                                        name={field.name}
-                                                        value={formData[field.name]}
-                                                        onChange={handleChange}
-                                                        className={styles.input}
-                                                        placeholder={field.placeholder}
-                                                        autoComplete={field.name}
-                                                        aria-invalid={Boolean(errors[field.name])}
-                                                        aria-describedby={errors[field.name] ? `${field.name}-error` : undefined}
-                                                    />
-                                                )}
-                                            </div>
-                                            {errors[field.name] && (
-                                                <p id={`${field.name}-error`} className={styles.error} role="alert">
-                                                    # error: {errors[field.name]}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ))}
-
-                                    <div className={styles.actions}>
-                                        <button type="submit" className={styles.runButton}>
-                                            run
-                                            <CornerDownLeft size={16} aria-hidden="true" />
-                                        </button>
-                                        <span className={styles.hint}>or Ctrl / ⌘ + Enter</span>
-                                    </div>
-                                </motion.form>
-                            ) : (
-                                <motion.div
-                                    key="pipeline"
-                                    className={styles.pipeline}
-                                    role="status"
-                                    aria-live="polite"
-                                    initial={{ opacity: 0, filter: 'blur(4px)' }}
-                                    animate={{ opacity: 1, filter: 'blur(0px)' }}
-                                    exit={{ opacity: 0, filter: 'blur(4px)' }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    <p className={styles.command}>
-                                        <span className={styles.prompt} aria-hidden="true">$</span> send-message --run
-                                    </p>
-                                    <div className={styles.progress} aria-hidden="true">
-                                        <motion.span
-                                            className={`${styles.progressBar} ${stage === 'failed' ? styles.progressFailed : ''}`}
-                                            animate={{ scaleX: stage === 'failed' ? 1 : progress }}
-                                            transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
-                                        />
-                                    </div>
-                                    <ol className={styles.steps}>
-                                        {STEPS.map((step, index) => {
-                                            const isDone = index < completed;
-                                            const isFailed = stage === 'failed' && index === completed;
-                                            const isRunning = stage === 'running' && index === completed;
-                                            return (
-                                                <li
-                                                    key={step}
-                                                    className={`${styles.step} ${isDone ? styles.stepDone : ''} ${
-                                                        isFailed ? styles.stepFailed : ''
-                                                    } ${isRunning ? styles.stepRunning : ''}`}
-                                                >
-                                                    <span className={styles.stepIcon} aria-hidden="true">
-                                                        {isDone ? (
-                                                            <Check size={14} />
-                                                        ) : isFailed ? (
-                                                            <X size={14} />
-                                                        ) : isRunning ? (
-                                                            <Loader2 size={14} className={styles.spin} />
-                                                        ) : (
-                                                            <span className={styles.stepDot} />
-                                                        )}
-                                                    </span>
-                                                    {step}
-                                                </li>
-                                            );
-                                        })}
-                                    </ol>
-
-                                    {stage === 'done' && (
-                                        <motion.div
-                                            className={styles.result}
-                                            initial={{ opacity: 0, y: 8 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                        >
-                                            <p className={styles.success}>✓ message delivered. I&apos;ll get back to you soon.</p>
-                                            <button type="button" className={styles.againButton} onClick={() => setStage('idle')}>
-                                                send another
-                                            </button>
-                                        </motion.div>
-                                    )}
-                                    {stage === 'failed' && (
-                                        <motion.div
-                                            className={styles.result}
-                                            initial={{ opacity: 0, y: 8 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                        >
-                                            <p className={styles.failure}>
-                                                ✗ delivery failed. Try again, or email hello@udaradev.me directly.
-                                            </p>
-                                            <button type="button" className={styles.againButton} onClick={() => setStage('idle')}>
-                                                <RotateCcw size={14} aria-hidden="true" />
-                                                retry
-                                            </button>
-                                        </motion.div>
-                                    )}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
-
-                    <motion.div
-                        className={styles.aside}
-                        initial={{ opacity: 0, y: 40, filter: 'blur(6px)' }}
-                        whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        viewport={{ once: true, margin: '-80px' }}
-                        transition={{ duration: 0.9, delay: 0.28, ease: [0.23, 1, 0.32, 1] }}
-                    >
-                        <p className={styles.asideText}>
-                            I&apos;m always open to discussing new projects, creative ideas, or opportunities to be part
-                            of your vision. Send a message, or find me here:
-                        </p>
-                        <motion.div
-                            className={styles.socialLinks}
-                            initial="hidden"
-                            whileInView="show"
-                            viewport={{ once: true, margin: '-60px' }}
-                            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
-                        >
-                            {socialLinks.map((social) => (
-                                <motion.div
-                                    key={social.label}
-                                    variants={{
-                                        hidden: { opacity: 0, y: 16 },
-                                        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] } },
-                                    }}
-                                >
-                                    <MagneticLink href={social.href} label={social.label} Icon={social.icon} />
-                                </motion.div>
-                            ))}
-                        </motion.div>
-                    </motion.div>
+                        </ul>
+                    </div>
+                    <div className={styles.stamp} aria-hidden="true">
+                        <span>Work</span>
+                        <span>together</span>
+                    </div>
                 </div>
+            </div>
+
+            <form className={styles.form} onSubmit={handleSubmit} onKeyDown={handleKeyDown} noValidate>
+                <p className={styles.formHead}>
+                    <span className={styles.formIndex}>/09</span> Send a message
+                </p>
+                <div className={styles.fields}>
+                    {FIELDS.map((field) => {
+                        const id = `contact-${field.name}`;
+                        const error = errors[field.name];
+                        const common = {
+                            id,
+                            name: field.name,
+                            value: formData[field.name],
+                            onChange: handleChange,
+                            placeholder: field.placeholder,
+                            'aria-invalid': Boolean(error),
+                            'aria-describedby': error ? `${id}-error` : undefined,
+                            className: styles.input,
+                        };
+                        return (
+                            <div key={field.name} className={`${styles.field} ${field.name === 'message' ? styles.fieldWide : ''}`}>
+                                <label htmlFor={id} className={styles.label}>
+                                    {field.label}
+                                </label>
+                                {field.name === 'message' ? (
+                                    <textarea {...common} rows={4} />
+                                ) : (
+                                    <input {...common} type={field.name === 'email' ? 'email' : 'text'} autoComplete={field.name} />
+                                )}
+                                {error && (
+                                    <span id={`${id}-error`} className={styles.error}>
+                                        {error}
+                                    </span>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className={styles.submitRow}>
+                    <button type="submit" className="btn-solid" disabled={stage === 'running'}>
+                        {stage === 'running' && <Loader2 size={16} className={styles.spin} aria-hidden="true" />}
+                        {stage === 'running' ? 'Sending' : 'Send message'}
+                        {stage !== 'running' && <ArrowUpRight size={16} aria-hidden="true" />}
+                    </button>
+                    <span className={styles.status} role="status" aria-live="polite">
+                        {stage === 'done' && (
+                            <>
+                                <Check size={15} aria-hidden="true" /> Message delivered. I&apos;ll get back to you soon.
+                            </>
+                        )}
+                        {stage === 'failed' && (
+                            <>
+                                <RotateCcw size={15} aria-hidden="true" /> Couldn&apos;t send. Try again, or email {EMAIL}.
+                            </>
+                        )}
+                        {stage === 'idle' && 'or Ctrl / ⌘ + Enter'}
+                    </span>
+                </div>
+            </form>
+
+            <footer className={styles.footer}>
+                <span>© {new Date().getFullYear()} Udara Nalawansa</span>
+                <span>Software · Cloud · Automation</span>
+                <span>Thanks for scrolling</span>
+            </footer>
+            <div className={styles.hazardBand} aria-hidden="true">
+                <span className="hazard" />
+                <span className={styles.access}>&gt; Access granted_</span>
+                <span className="hazard" />
             </div>
         </section>
     );

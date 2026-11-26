@@ -1,5 +1,7 @@
 ---
 title: "(III) Building a Kubernetes Cluster with Kubespray: A Learning Journey"
+seoTitle: "Kubespray Kubernetes Cluster, Part III: Networking"
+excerpt: "Part III: giving every node of a lab Kubernetes cluster a static IP that survives reboots, with the netplan commands and the lessons learned."
 date: "2025-11-01T01:36:00.000+05:30"
 category: "research-diaries"
 updated: "2025-12-05T21:18:07Z"
@@ -7,7 +9,7 @@ readTime: "3 min read"
 mainImage: "/blog/building-a-kubernetes3/cover.png"
 ---
 
-*If you haven’t checked the previous blog post, **[P](https://www.udaradev.me/blog/building-a-kubernetes2)*[art II](https://www.udaradev.me/blog/building-a-kubernetes2) *covers how the hardware was prepared and Ubuntu Server was successfully installed on all nodes. With the servers finally running, the next challenge was setting up a stable network so the cluster could communicate reliably.*
+*If you haven’t checked the previous blog post, **[P](/blog/building-a-kubernetes2)*[art II](/blog/building-a-kubernetes2) *covers how the hardware was prepared and Ubuntu Server was successfully installed on all nodes. With the servers finally running, the next challenge was setting up a stable network so the cluster could communicate reliably.*
 
 *If the hardware setup was the first battle, networking was definitely the second. To run a Kubernetes cluster, we needed a clean lab network and static IPs for each node. Sounds simple, right? Not when every reboot wiped the configuration. In this post, I’ll explain how we assigned IPs, the commands we used, and the lessons we learned about keeping things stable.*
 
@@ -78,3 +80,5 @@ This confirms that **eth0** now has the static **IP 192.168.1.201.** We repeated
 ## Whats Next
 
 Once static IPs were assigned and verified, the next post is about the step to **enable passwordless SSH** between the master and worker nodes. This is required for **Kubespray** to deploy Kubernetes across the cluster without manual intervention on each node.
+
+**Next in the series:** [Part IV: deploying with Kubespray](/blog/building-a-kubernetes4)

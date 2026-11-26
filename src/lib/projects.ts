@@ -9,6 +9,9 @@ export interface CaseStudy {
     title: string;
     date: string;
     excerpt?: string;
+    // Shorter search title / description when the visible ones are too long
+    seoTitle?: string;
+    seoDescription?: string;
     techStack: string[];
     githubUrl?: string;
     liveUrl?: string;
@@ -30,6 +33,8 @@ function parseCaseStudy(fileName: string): CaseStudyWithContent {
         title: data.title ?? slug,
         date: data.date ?? '',
         excerpt: data.excerpt,
+        seoTitle: data.seoTitle,
+        seoDescription: data.seoDescription,
         techStack: data.techStack ?? [],
         githubUrl: data.githubUrl,
         liveUrl: data.liveUrl,

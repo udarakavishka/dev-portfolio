@@ -33,7 +33,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     const postUrl = absoluteUrl(`/blog/${slug}`);
-    const imageUrl = post.mainImage || '/screenshot.png';
+    // Posts without a cover get their own generated card (./opengraph-image.tsx).
+    const imageUrl = post.mainImage || `/blog/${slug}/opengraph-image`;
     const title = post.seoTitle || post.title;
     const description = post.seoDescription || post.excerpt || `Read ${post.title} by Udara Nalawansa, software engineer in Sri Lanka.`;
 
@@ -67,6 +68,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         },
         alternates: {
             canonical: postUrl,
+            types: { 'text/markdown': `/blog/${slug}/md` },
         },
         other: {
             'article:author': SITE_URL,
@@ -92,7 +94,7 @@ export default async function BlogPost({
     return (
         <>
             <BreadcrumbSchema items={[
-                { name: 'Home', url: SITE_URL },
+                { name: 'Home', url: '/' },
                 { name: 'Blog', url: '/blog' },
                 { name: post.title, url: `/blog/${slug}` }
             ]} />
@@ -118,9 +120,19 @@ export default async function BlogPost({
                             <h1 className={styles.title}>{post.title}</h1>
                             <div className={styles.meta}>
                                 <div className={styles.metaItem}>
-                                    <Calendar size={16} />
-                                    <span>{new Date(post.date).toLocaleDateString()}</span>
+                                    <span>by <Link href="/">Udara Nalawansa</Link></span>
                                 </div>
+                                <div className={styles.metaItem}>
+                                    <Calendar size={16} />
+                                    <time dateTime={post.date}>{new Date(post.date).toLocaleDateString()}</time>
+                                </div>
+                                {post.updated && (
+                                    <div className={styles.metaItem}>
+                                        <span>
+                                            • updated <time dateTime={post.updated}>{new Date(post.updated).toLocaleDateString()}</time>
+                                        </span>
+                                    </div>
+                                )}
                                 {post.readTime && (
                                     <div className={styles.metaItem}>
                                         <span>• {post.readTime}</span>
@@ -128,7 +140,7 @@ export default async function BlogPost({
                                 )}
                                 {post.category && (
                                     <Link
-                                        href={`/blog?category=${post.category}`}
+                                        href={`/blog/category/${post.category}`}
                                         className={styles.categoryChip}
                                     >
                                         {CATEGORIES.find((c) => c.slug === post.category)?.label ?? post.category}
@@ -168,6 +180,17 @@ export default async function BlogPost({
                             />
                         </div>
                     </article>
+
+                    {/* Visible author block: who wrote this and where to find them */}
+                    <section className={styles.related} aria-labelledby="about-author">
+                        <h2 id="about-author" className={styles.relatedTitle}>About the author</h2>
+                        <p className={styles.authorBio}>
+                            <Link href="/">Udara Nalawansa</Link> is an Associate Software Engineer at Xaventra in Sri Lanka and a First Class
+                            BSc (Hons) IT graduate, working on full stack development, cloud infrastructure, Kubernetes and MLOps.
+                            Find him on <a href="https://github.com/udaraKavishka" target="_blank" rel="noopener noreferrer me">GitHub</a> and{' '}
+                            <a href="https://www.linkedin.com/in/udaranalawansa/" target="_blank" rel="noopener noreferrer me">LinkedIn</a>.
+                        </p>
+                    </section>
 
                     {relatedPosts.length > 0 && (
                         <section className={styles.related}>

@@ -11,6 +11,9 @@ export interface ResearchPage {
     period?: string;
     institution?: string;
     excerpt?: string;
+    // Shorter search title / description when the visible ones are too long
+    seoTitle?: string;
+    seoDescription?: string;
     cover?: string;
     techStack: string[];
 }
@@ -31,6 +34,8 @@ function parseResearch(fileName: string): ResearchPageWithContent {
         period: data.period,
         institution: data.institution,
         excerpt: data.excerpt,
+        seoTitle: data.seoTitle,
+        seoDescription: data.seoDescription,
         cover: data.cover,
         techStack: data.techStack ?? [],
         content,

@@ -5,7 +5,7 @@ export const PERSON_ID = `${SITE_URL}/#person`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 
 export const defaultDescription =
-  'Udara Nalawansa is an Associate Software Engineer at Xaventra in Sri Lanka focused on full stack engineering, cloud infrastructure, Kubernetes, CI/CD automation, Terraform, Docker, and AWS.';
+  'Udara Nalawansa, Associate Software Engineer at Xaventra in Sri Lanka. Full stack, cloud infrastructure, Kubernetes, CI/CD, Terraform and AWS.';
 
 export function absoluteUrl(path = '/') {
   if (path.startsWith('http://') || path.startsWith('https://')) {

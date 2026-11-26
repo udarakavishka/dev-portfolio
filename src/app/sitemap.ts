@@ -3,6 +3,7 @@ import { getAllPosts } from '@/lib/posts'
 import { getAllCaseStudies } from '@/lib/projects'
 import { getAllResearch } from '@/lib/research'
 import { SITE_URL } from '@/lib/seo'
+import { CATEGORIES } from '@/lib/categories'
 
 function toDate(value?: string): Date | null {
   if (!value) return null
@@ -10,9 +11,10 @@ function toDate(value?: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
-function newest(dates: Array<Date | null>): Date {
-  const valid = dates.filter((date): date is Date => date !== null)
-  if (valid.length === 0) return new Date()
+function newest(dates: Array<Date | null | undefined>): Date | undefined {
+  const valid = dates.filter((date): date is Date => date instanceof Date)
+  // No dated content: omit lastmod rather than claim the build time.
+  if (valid.length === 0) return undefined
   return valid.reduce((latest, date) => (date > latest ? date : latest))
 }
 
@@ -27,8 +29,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .map(({ post, lastModified }) => ({
       url: `${SITE_URL}/blog/${post.slug}`,
       lastModified: lastModified as Date,
-      changeFrequency: 'monthly' as const,
-      priority: post.pinned ? 0.8 : 0.7,
     }))
 
   const projectPages: MetadataRoute.Sitemap = caseStudies
@@ -37,8 +37,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .map(({ project, lastModified }) => ({
       url: `${SITE_URL}/projects/${project.slug}`,
       lastModified: lastModified as Date,
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
     }))
 
   const researchPages: MetadataRoute.Sitemap = research
@@ -47,8 +45,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .map(({ item, lastModified }) => ({
       url: `${SITE_URL}/research/${item.slug}`,
       lastModified: lastModified as Date,
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
     }))
 
   const latestPost = newest(blogPages.map((page) => page.lastModified as Date))
@@ -62,16 +58,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: SITE_URL,
       lastModified: latestContent,
-      changeFrequency: 'weekly',
-      priority: 1.0,
     },
     {
       url: `${SITE_URL}/blog`,
       lastModified: latestPost,
-      changeFrequency: 'daily',
-      priority: 0.9,
     },
   ]
 
-  return [...staticPages, ...researchPages, ...projectPages, ...blogPages]
+  const categoryPages: MetadataRoute.Sitemap = CATEGORIES.map((category) => ({
+    url: `${SITE_URL}/blog/category/${category.slug}`,
+    lastModified: newest(
+      posts
+        .filter((post) => post.category === category.slug)
+        .map((post) => toDate(post.updated) ?? toDate(post.date))
+    ),
+  }))
+
+  return [...staticPages, ...categoryPages, ...researchPages, ...projectPages, ...blogPages]
 }

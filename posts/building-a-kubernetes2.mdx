@@ -1,5 +1,7 @@
 ---
 title: "(II)Building a Kubernetes Cluster with Kubespray: A Learning Journey"
+seoTitle: "Kubespray Kubernetes Cluster, Part II: Hardware"
+excerpt: "Part II: preparing lab hardware for a Kubespray cluster, the BIOS boot problem that forced a switch of machines, and installing Ubuntu Server."
 date: "2025-10-15T01:32:00.000+05:30"
 category: "research-diaries"
 updated: "2025-12-05T20:05:35Z"
@@ -7,7 +9,7 @@ readTime: "3 min read"
 mainImage: "/blog/building-a-kubernetes2/cover.png"
 ---
 
-If you haven’t checked the previous blog post, [Part I](https://www.udaradev.me/blog/building-a-kubernetes1) introduces the project and the motivation behind building a Kubernetes cluster for research. With the goals defined, the first practical step was setting up the hardware and operating systems.
+If you haven’t checked the previous blog post, [Part I](/blog/building-a-kubernetes1) introduces the project and the motivation behind building a Kubernetes cluster for research. With the goals defined, the first practical step was setting up the hardware and operating systems.
 
 The excitement of unboxing our hardware quickly turned into frustration when the first roadblock appeared. Installing Ubuntu on Lenovo systems didn’t go as planned, and the BIOS had its own opinion on booting. Here’s the story of how we moved past the struggle, switched machines, and finally got our first servers running Ubuntu smoothly.
 
@@ -46,3 +48,5 @@ This step was crucial because a stable operating system is the foundation for an
 ## Whats Next
 
 The next post is about how to assign **static IP addresses** for all nodes, ensuring reliable communication across the cluster. Once the network is stable, passwordless SSH can be configured to prepare for **Kubernetes deployment using Kubespray**.
+
+**Next in the series:** [Part III: networking and static IPs](/blog/building-a-kubernetes3)

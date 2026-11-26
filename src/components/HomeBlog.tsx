@@ -1,16 +1,10 @@
-'use client';
-
-import { useRef } from 'react';
-import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Clock } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import type { Post } from '@/lib/posts';
 import { CATEGORIES } from '@/lib/categories';
 import styles from './HomeBlog.module.css';
 import SectionHeading from './motion/SectionHeading';
-import Magnetic from './motion/Magnetic';
-import { gsap, useGSAP, ScrollTrigger, MOTION_OK } from '@/lib/gsap';
 
 interface HomeBlogProps {
     posts: Post[];
@@ -32,127 +26,77 @@ function shortReadTime(readTime?: string) {
     return readTime?.replace(/\s*read$/i, '');
 }
 
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// Latest post as a large card, the next ones as a numbered log.
 export default function HomeBlog({ posts }: HomeBlogProps) {
-    const sectionRef = useRef<HTMLElement>(null);
     const latestPosts = posts.slice(0, 5);
-
-    // Featured cover wipes open from the right edge, then settles from a slight zoom.
-    useGSAP(
-        () => {
-            const mm = gsap.matchMedia();
-            mm.add(MOTION_OK, () => {
-                const image = sectionRef.current?.querySelector(`.${styles.featuredImage}`);
-                if (!image) return;
-                gsap.timeline({ scrollTrigger: { trigger: image, start: 'top 85%', once: true } })
-                    .fromTo(image, { clipPath: 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0%)', duration: 1.2, ease: 'expo.inOut' })
-                    .fromTo(image.querySelector('img'), { scale: 1.25 }, { scale: 1, duration: 1.6, ease: 'expo.out' }, 0.1);
-            });
-            // Touch screens: the post row in the middle of the screen takes the hover look.
-            mm.add(`${MOTION_OK} and (hover: none)`, () => {
-                gsap.utils.toArray<HTMLElement>(`.${styles.row}`).forEach((row) => {
-                    ScrollTrigger.create({
-                        trigger: row,
-                        start: 'top 60%',
-                        end: 'bottom 40%',
-                        toggleClass: { targets: row, className: styles.rowFocus },
-                    });
-                });
-            });
-        },
-        { scope: sectionRef }
-    );
-
-    if (latestPosts.length === 0) {
-        return null;
-    }
-
+    if (latestPosts.length === 0) return null;
     const [featured, ...rest] = latestPosts;
 
     return (
-        <section id="blog" ref={sectionRef} className={styles.blog}>
-            <div className={styles.container}>
+        <section id="blog" className={`${styles.blog} frame`}>
+            <div className="gutter">
                 <SectionHeading
-                    index="07"
-                    label="writing"
-                    title={<>Notes from <em>the cluster</em></>}
-                    lede="Write-ups on Kubernetes, autoscaling, RAG systems and the mistakes worth sharing."
+                    index="08"
+                    label="Signal"
+                    meta="Latest from the blog"
+                    title={<>Notes from <em>real work</em></>}
                 />
+            </div>
 
-                <motion.article
-                    className={`${styles.featured} ${featured.mainImage ? styles.featuredWithImage : ''}`}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-80px' }}
-                    transition={{ duration: 0.9, ease: [0.23, 1, 0.32, 1] }}
-                >
-                    <div className={styles.featuredBody}>
-                        <div className={styles.featuredMeta}>
-                            <span className={styles.featuredLabel}>latest</span>
-                            {featured.category && <span className={styles.category}>{categoryLabel(featured.category)}</span>}
-                            {featured.readTime && (
-                                <span className={styles.readTime}>
-                                    <Clock size={13} aria-hidden="true" />
-                                    {shortReadTime(featured.readTime)}
-                                </span>
-                            )}
-                        </div>
-                        <h3 className={styles.featuredTitle}>
-                            <Link href={`/blog/${featured.slug}`} className={styles.featuredLink}>
-                                {featured.title}
-                            </Link>
-                        </h3>
-                        {featured.excerpt && <p className={styles.excerpt}>{featured.excerpt}</p>}
-                        <div className={styles.featuredFoot}>
-                            <span className={styles.date}>{formatDate(featured.date)}</span>
-                            <span className={styles.readMore}>
-                                Read post
-                                <ArrowRight size={16} aria-hidden="true" />
-                            </span>
-                        </div>
-                    </div>
+            <div className={styles.grid}>
+                <Link href={`/blog/${featured.slug}`} className={styles.featured} data-reveal>
                     {featured.mainImage && (
-                        <div className={styles.featuredImage}>
+                        <span className={styles.cover}>
                             <Image
                                 src={featured.mainImage}
                                 alt={featured.mainImageAlt ?? ''}
                                 fill
-                                sizes="(max-width: 768px) 100vw, 480px"
-                                className={styles.featuredImg}
+                                sizes="(max-width: 1000px) 100vw, 640px"
+                                className={styles.coverImage}
                             />
-                        </div>
+                        </span>
                     )}
-                </motion.article>
+                    <span className={styles.featuredBody}>
+                        <span className={styles.meta}>
+                            <span className={styles.newTag}>Latest</span>
+                            {featured.category && <span>{categoryLabel(featured.category)}</span>}
+                            <span>{formatDate(featured.date)}</span>
+                            {featured.readTime && <span>{shortReadTime(featured.readTime)}</span>}
+                        </span>
+                        <span className={styles.featuredTitle}>{featured.title}</span>
+                        {featured.excerpt && <span className={styles.excerpt}>{featured.excerpt}</span>}
+                        <span className={styles.read}>
+                            Read post
+                            <ArrowUpRight size={16} aria-hidden="true" />
+                        </span>
+                    </span>
+                </Link>
 
-                <ul className={styles.list}>
-                    {rest.map((post, index) => (
-                        <motion.li
-                            key={post.slug}
-                            initial={{ opacity: 0, y: 18, filter: 'blur(4px)' }}
-                            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                            viewport={{ once: true, margin: '-60px' }}
-                            transition={{ delay: [0, 0.06, 0.1, 0.13][index % 4], duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
-                        >
-                            <Link href={`/blog/${post.slug}`} className={styles.row}>
-                                <span className={styles.rowDate}>{formatDate(post.date)}</span>
-                                <span className={styles.rowTitle}>{post.title}</span>
-                                <span className={styles.rowMeta}>
-                                    {post.category && <span className={styles.category}>{categoryLabel(post.category)}</span>}
-                                    {post.readTime && <span className={styles.rowRead}>{shortReadTime(post.readTime)}</span>}
-                                </span>
-                                <ArrowUpRight size={18} className={styles.rowArrow} aria-hidden="true" />
-                            </Link>
-                        </motion.li>
-                    ))}
-                </ul>
-
-                <div className={styles.viewMoreContainer}>
-                    {/* No prefetch: the blog index carries the full-text search index for every post */}
-                    <Magnetic>
-                        <Link href="/blog" prefetch={false} className="pill-button">
-                            <span>All posts</span>
-                            <ArrowRight size={18} aria-hidden="true" />
-                        </Link>
-                    </Magnetic>
+                <div className={styles.side}>
+                    <ol className={styles.list}>
+                        {rest.map((post, index) => (
+                            <li key={post.slug} data-reveal style={{ '--i': index + 1 } as React.CSSProperties}>
+                                <Link href={`/blog/${post.slug}`} className={styles.row}>
+                                    <span className={styles.no}>{pad(index + 2)}</span>
+                                    <span className={styles.rowBody}>
+                                        <span className={styles.rowTitle}>{post.title}</span>
+                                        <span className={styles.rowMeta}>
+                                            {formatDate(post.date)}
+                                            {post.category && ` · ${categoryLabel(post.category)}`}
+                                            {post.readTime && ` · ${shortReadTime(post.readTime)}`}
+                                        </span>
+                                    </span>
+                                    <ArrowUpRight size={16} className={styles.rowArrow} aria-hidden="true" />
+                                </Link>
+                            </li>
+                        ))}
+                    </ol>
+                    <Link href="/blog" prefetch={false} className={styles.all}>
+                        All posts
+                        <ArrowUpRight size={16} aria-hidden="true" />
+                    </Link>
                 </div>
             </div>
         </section>

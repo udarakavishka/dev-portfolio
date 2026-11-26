@@ -1,0 +1,65 @@
+.barricade {
+    --tape: var(--accent-primary);
+    max-width: var(--page-max);
+    margin: 0 auto;
+    padding-block: clamp(2rem, 4.5vw, 3.75rem);
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    font-family: var(--font-mono);
+}
+
+.paper {
+    --tape: var(--paper);
+}
+
+.tape {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    height: 18px;
+    border-top: 1px solid var(--tape);
+    border-bottom: 1px solid var(--tape);
+}
+
+.stripes {
+    background: repeating-linear-gradient(-45deg, var(--tape) 0 10px, transparent 10px 20px);
+    background-size: 28.28px 28.28px;
+    opacity: 0.85;
+    animation: crawl 24s linear infinite;
+}
+
+.stripes:last-child {
+    animation-direction: reverse;
+}
+
+/* Very slow drift so the tape feels alive without pulling the eye */
+@keyframes crawl {
+    to {
+        background-position: 282.8px 0;
+    }
+}
+
+.label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    font-size: 0.7rem;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--tape);
+    border-left: 1px solid var(--tape);
+    border-right: 1px solid var(--tape);
+    background: var(--bg-primary);
+}
+
+.arrow {
+    color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stripes {
+        animation: none;
+    }
+}

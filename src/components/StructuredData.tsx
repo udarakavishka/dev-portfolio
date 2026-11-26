@@ -1,5 +1,13 @@
 import { absoluteUrl, defaultDescription, PERSON_ID, PERSON_NAME, SITE_NAME, SITE_URL, WEBSITE_ID } from '@/lib/seo';
 
+// One list so every Person node points at the same profiles.
+const PERSON_SAME_AS = [
+  "https://github.com/udaraKavishka",
+  "https://www.linkedin.com/in/udaranalawansa/",
+  "https://www.facebook.com/udara.nalawansa/",
+  "https://instagram.com/_udara27"
+];
+
 function JsonLd({ schema }: { schema: Record<string, unknown> }) {
   const json = JSON.stringify(schema).replace(/</g, '\\u003c');
 
@@ -32,12 +40,7 @@ export function PersonSchema() {
       name: "University of Jaffna",
       sameAs: "https://www.jfn.ac.lk/"
     },
-    sameAs: [
-      "https://github.com/udaraKavishka",
-      "https://www.linkedin.com/in/udaranalawansa/",
-      "https://web.facebook.com/udara.nalawansa/",
-      "https://instagram.com/_udara27"
-    ],
+    sameAs: PERSON_SAME_AS,
     knowsAbout: [
       "DevOps",
       "Docker",
@@ -62,8 +65,7 @@ export function PersonSchema() {
     ],
     address: {
       "@type": "PostalAddress",
-      addressCountry: "LK",
-      addressLocality: "Sri Lanka"
+      addressCountry: "LK"
     }
   };
 
@@ -99,6 +101,11 @@ type ProfilePageSchemaProps = {
 };
 
 export function ProfilePageSchema({ projects, posts = [] }: ProfilePageSchemaProps) {
+  const dateModified = posts
+    .map((post) => post.date)
+    .filter((date): date is string => Boolean(date))
+    .sort()
+    .at(-1);
   const schema = {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
@@ -108,25 +115,16 @@ export function ProfilePageSchema({ projects, posts = [] }: ProfilePageSchemaPro
     isPartOf: {
       "@id": WEBSITE_ID
     },
-    mainEntity: {
-      "@type": "Person",
-      "@id": PERSON_ID,
-      name: PERSON_NAME,
-      alternateName: "Udara Kavishka Nalawansa",
-      description: defaultDescription,
-      image: absoluteUrl('/profile.jpg'),
-      sameAs: [
-        "https://github.com/udaraKavishka",
-        "https://www.linkedin.com/in/udaranalawansa/"
-      ]
-    },
+    ...(dateModified && { dateModified }),
+    // The full Person node is emitted by PersonSchema; reference it here.
+    mainEntity: { "@id": PERSON_ID },
     hasPart: [
       ...projects.slice(0, 6).map((project) => ({
         "@type": "SoftwareSourceCode",
         name: project.title,
         description: project.description,
         programmingLanguage: project.techStack,
-        codeRepository: project.githubUrl,
+        ...(project.githubUrl && { codeRepository: project.githubUrl }),
         ...(project.liveUrl && { url: project.liveUrl }),
         author: { "@id": PERSON_ID }
       })),
@@ -169,24 +167,15 @@ export function ArticleSchema({ title, publishedAt, modifiedAt, excerpt, imageUr
       name: PERSON_NAME,
       url: SITE_URL
     },
-    publisher: {
-      "@type": "Person",
-      "@id": PERSON_ID,
-      name: PERSON_NAME,
-      url: SITE_URL,
-      logo: {
-        "@type": "ImageObject",
-        url: absoluteUrl('/favicon.png')
-      }
-    },
-    image: imageUrl || absoluteUrl('/screenshot.png'),
+    isPartOf: { "@id": WEBSITE_ID },
+    image: imageUrl || absoluteUrl(`/blog/${slug}/opengraph-image`),
     url: absoluteUrl(`/blog/${slug}`),
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": absoluteUrl(`/blog/${slug}`)
     },
-    keywords: tags?.join(", ") || "DevOps, Cloud Engineering, Software Development",
-    dateModified: modifiedAt || publishedAt,
+    ...(tags?.length && { keywords: tags.join(", ") }),
+    ...(modifiedAt && { dateModified: modifiedAt }),
   };
 
   return <JsonLd schema={schema} />;
@@ -213,7 +202,7 @@ type ProjectItem = {
   title: string;
   description: string;
   techStack: string[];
-  githubUrl: string;
+  githubUrl?: string;
   liveUrl?: string;
 };
 
@@ -230,7 +219,7 @@ export function ProjectsSchema({ projects }: { projects: ProjectItem[] }) {
         name: project.title,
         description: project.description,
         programmingLanguage: project.techStack,
-        codeRepository: project.githubUrl,
+        ...(project.githubUrl && { codeRepository: project.githubUrl }),
         ...(project.liveUrl && { url: project.liveUrl }),
         author: {
           "@type": "Person",
@@ -280,13 +269,40 @@ export function CaseStudySchema({ title, excerpt, techStack, githubUrl, liveUrl,
   return <JsonLd schema={schema} />;
 }
 
+type ResearchSchemaProps = {
+  title: string;
+  excerpt?: string;
+  date?: string;
+  institution?: string;
+  slug: string;
+};
+
+export function ResearchSchema({ title, excerpt, date, institution, slug }: ResearchSchemaProps) {
+  const url = absoluteUrl(`/research/${slug}`);
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "@id": `${url}#research`,
+    headline: title,
+    description: excerpt || title,
+    url,
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    ...(date && { datePublished: date }),
+    ...(institution && { sourceOrganization: { "@type": "CollegeOrUniversity", name: institution } }),
+    author: { "@id": PERSON_ID },
+    isPartOf: { "@id": WEBSITE_ID }
+  };
+
+  return <JsonLd schema={schema} />;
+}
+
 export function BlogListingSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "@id": absoluteUrl('/blog'),
-    name: "DevOps & Cloud Engineering Blog",
-    description: "Technical articles about DevOps, cloud infrastructure, Kubernetes, Docker, CI/CD, and MLOps by Udara Nalawansa.",
+    name: "DevOps, Cloud and ML Engineering Blog",
+    description: "Notes by Udara Nalawansa on Kubernetes, Terraform, CI/CD, RAG and ML research, plus lessons from a software engineering internship.",
     url: absoluteUrl('/blog'),
     author: {
       "@type": "Person",

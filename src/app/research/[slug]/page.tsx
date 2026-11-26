@@ -6,11 +6,11 @@ import remarkGfm from 'remark-gfm';
 import { notFound } from 'next/navigation';
 import { getAllResearch, getResearchBySlug } from '@/lib/research';
 import Navbar from '@/components/Navbar';
-import { BreadcrumbSchema } from '@/components/StructuredData';
+import { BreadcrumbSchema, ResearchSchema } from '@/components/StructuredData';
 import { createMdxComponents } from '@/lib/mdx-components';
 import styles from '../../projects/[slug]/project.module.css';
 import type { Metadata } from 'next';
-import { absoluteUrl, SITE_URL } from '@/lib/seo';
+import { absoluteUrl } from '@/lib/seo';
 
 const mdxComponents = createMdxComponents(styles.contentImage);
 
@@ -32,8 +32,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     const researchUrl = absoluteUrl(`/research/${slug}`);
-    const title = `${research.title} | Research`;
-    const description = research.excerpt || `Research by Udara Nalawansa: ${research.title}.`;
+    const title = research.seoTitle ?? `${research.title} | Research`;
+    const description = research.seoDescription || research.excerpt || `Research by Udara Nalawansa: ${research.title}.`;
     const images = research.cover ? [{ url: research.cover, width: 2400, height: 1254, alt: research.title }] : undefined;
 
     return {
@@ -76,10 +76,16 @@ export default async function ResearchDetail({
     return (
         <>
             <BreadcrumbSchema items={[
-                { name: 'Home', url: SITE_URL },
-                { name: 'Research', url: '/#research' },
+                { name: 'Home', url: '/' },
                 { name: research.title, url: `/research/${slug}` }
             ]} />
+            <ResearchSchema
+                title={research.title}
+                excerpt={research.excerpt}
+                date={research.date}
+                institution={research.institution}
+                slug={slug}
+            />
             <Navbar />
             <main className={styles.project}>
                 <div className={styles.container}>

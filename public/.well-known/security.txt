@@ -1,0 +1,4 @@
+Contact: mailto:hello@udaradev.me
+Expires: 2027-11-24T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://udaradev.me/.well-known/security.txt

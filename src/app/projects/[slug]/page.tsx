@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import Link from 'next/link';
 import { Calendar, ArrowLeft, Github, ExternalLink } from 'lucide-react';
 import { MDXRemote } from 'next-mdx-remote/rsc';
@@ -9,7 +11,7 @@ import { CaseStudySchema, BreadcrumbSchema } from '@/components/StructuredData';
 import { createMdxComponents } from '@/lib/mdx-components';
 import styles from './project.module.css';
 import type { Metadata } from 'next';
-import { absoluteUrl, SITE_URL } from '@/lib/seo';
+import { absoluteUrl } from '@/lib/seo';
 
 const mdxComponents = createMdxComponents(styles.contentImage);
 
@@ -31,8 +33,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     const projectUrl = absoluteUrl(`/projects/${slug}`);
-    const title = `${project.title} | Case Study`;
-    const description = project.excerpt || `Case study: ${project.title} by Udara Nalawansa.`;
+    // This openGraph block replaces the site-wide one, so set the image here: the project cover, else the site card.
+    const hasCover = fs.existsSync(path.join(process.cwd(), 'public', 'projects', slug, 'cover.png'));
+    const image = hasCover ? `/projects/${slug}/cover.png` : '/screenshot.png';
+    const title = project.seoTitle ?? `${project.title} | Case Study`;
+    const description = project.seoDescription || project.excerpt || `Case study: ${project.title} by Udara Nalawansa.`;
 
     return {
         title,
@@ -44,12 +49,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             title,
             description,
             siteName: 'Udara Nalawansa Portfolio',
+            images: [image],
         },
         twitter: {
             card: 'summary_large_image',
             title,
             description,
             creator: '@udaranalawansa',
+            images: [image],
         },
         alternates: {
             canonical: projectUrl,
@@ -72,8 +79,7 @@ export default async function ProjectCaseStudy({
     return (
         <>
             <BreadcrumbSchema items={[
-                { name: 'Home', url: SITE_URL },
-                { name: 'Projects', url: '/#projects' },
+                { name: 'Home', url: '/' },
                 { name: project.title, url: `/projects/${slug}` }
             ]} />
             <CaseStudySchema

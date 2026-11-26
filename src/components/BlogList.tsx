@@ -11,6 +11,8 @@ import styles from './BlogList.module.css';
 
 interface BlogListProps {
     posts: Post[];
+    // Category pre-selected by /blog/category/<slug>
+    initialCategory?: string;
 }
 
 function formatDate(date: string) {
@@ -60,13 +62,15 @@ function bodySnippet(body: string, q: string) {
     );
 }
 
-export default function BlogList({ posts }: BlogListProps) {
+export default function BlogList({ posts, initialCategory }: BlogListProps) {
     const router = useRouter();
     const searchRef = useRef<HTMLInputElement>(null);
     const rowRefs = useRef<(HTMLAnchorElement | null)[]>([]);
 
     const [activeCategory, setActiveCategory] = useState<string | null>(() => {
+        if (initialCategory) return initialCategory;
         if (typeof window === 'undefined') return null;
+        // Old links used /blog?category=<slug>
         return new URLSearchParams(window.location.search).get('category');
     });
     const [query, setQuery] = useState('');
@@ -268,7 +272,7 @@ export default function BlogList({ posts }: BlogListProps) {
 
     const setCategory = (slug: string | null) => {
         setActiveCategory(slug);
-        window.history.replaceState(null, '', slug ? `/blog?category=${slug}` : '/blog');
+        window.history.replaceState(null, '', slug ? `/blog/category/${slug}` : '/blog');
     };
 
     return (
@@ -297,20 +301,31 @@ export default function BlogList({ posts }: BlogListProps) {
             </div>
 
             <div className={styles.filters}>
-                <button
+                {/* Real links so crawlers find the category pages; clicks filter in place */}
+                <Link
+                    href="/blog"
                     className={`${styles.filter} ${!activeCategory ? styles.filterActive : ''}`}
-                    onClick={() => setCategory(null)}
+                    aria-current={!activeCategory ? 'page' : undefined}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setCategory(null);
+                    }}
                 >
                     all ({allPosts.length})
-                </button>
+                </Link>
                 {CATEGORIES.map((category) => (
-                    <button
+                    <Link
                         key={category.slug}
+                        href={`/blog/category/${category.slug}`}
                         className={`${styles.filter} ${activeCategory === category.slug ? styles.filterActive : ''}`}
-                        onClick={() => setCategory(category.slug)}
+                        aria-current={activeCategory === category.slug ? 'page' : undefined}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setCategory(category.slug);
+                        }}
                     >
                         {category.label} ({categoryCounts[category.slug]})
-                    </button>
+                    </Link>
                 ))}
             </div>
 
@@ -353,6 +368,7 @@ export default function BlogList({ posts }: BlogListProps) {
                                     onMouseEnter={() => setSelectedIndex(index)}
                                     onClick={rememberPost(post.slug)}
                                 >
+                                    <span className={styles.rowNo}>{String(index + 1).padStart(2, '0')}</span>
                                     <span className={styles.rowMain}>
                                         <span className={styles.rowTitle}>
                                             {post.pinned && <Pin size={13} className={styles.pinIcon} />}
@@ -363,6 +379,9 @@ export default function BlogList({ posts }: BlogListProps) {
                                                 <span className={styles.snippetTag}>match:</span> {snippet}
                                             </span>
                                         )}
+                                    </span>
+                                    <span className={styles.rowCat}>
+                                        {CATEGORIES.find((c) => c.slug === post.category)?.label ?? post.category}
                                     </span>
                                     <span className={styles.rowDate}>{formatDate(post.date)}</span>
                                 </Link>

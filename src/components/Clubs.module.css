@@ -1,263 +1,151 @@
 .clubs {
-    padding: clamp(5rem, 10vw, 8rem) 1rem;
-    background-color: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    font-family: var(--font-mono);
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.wall {
+.lead {
     list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
     border-top: 1px solid var(--border-color);
 }
 
-/* ROLE ········ club + description ······ scope */
-.row {
-    position: relative;
-    isolation: isolate;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) 6.5rem;
-    gap: 1.5rem;
-    align-items: start;
-    padding: 1.5rem 0.75rem;
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.4rem 1.25rem 1.5rem;
+    border-right: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
+    margin-right: -1px;
+    transition: background-color var(--d-ui) ease;
 }
 
-/* Wash that slides in under the hovered row */
-.row::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: linear-gradient(90deg, color-mix(in srgb, var(--accent-primary) 8%, transparent), transparent 80%);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.5s var(--ease-out);
+.card:hover {
+    background: var(--bg-secondary);
 }
 
-.roleCell {
+.cardTop {
     display: flex;
-    align-items: flex-start;
-    gap: 0.9rem;
-    min-width: 0;
-}
-
-.roleIcon {
-    position: relative;
-    display: flex;
-    flex-shrink: 0;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    margin-top: 0.2rem;
-    border: 1px solid color-mix(in srgb, var(--accent-primary) 35%, var(--border-color));
-    border-radius: 12px;
-    background-color: var(--bg-secondary);
-    color: var(--accent-primary);
-    transition: transform 0.4s var(--ease-out), box-shadow 0.4s ease;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
 }
 
-.roleText {
-    min-width: 0;
-    transition: transform 0.45s var(--ease-out);
+.cardTop svg {
+    color: var(--accent-primary);
 }
 
 .role {
-    font-family: var(--font-display);
-    font-size: clamp(1.45rem, 3vw, 2.4rem);
-    font-weight: 650;
-    line-height: 1.05;
-    letter-spacing: -0.035em;
-    color: var(--text-primary);
-    transition: color var(--d-ui) ease;
+    font-family: var(--font-condensed);
+    font-size: 1.7rem;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--accent-primary);
 }
 
-.roleExtra {
-    margin-top: 0.4rem;
-    font-family: var(--font-mono);
+.roleNote {
     font-size: 0.72rem;
-    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.club {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--text-primary);
+}
+
+.desc {
+    font-size: 0.78rem;
+    line-height: 1.55;
     color: var(--text-muted);
 }
 
-/* Dotted leader that draws in from the role toward the club */
-.leader {
-    flex: 1;
-    min-width: 2rem;
-    height: 2px;
-    margin-top: clamp(1.15rem, 1.7vw, 1.5rem);
-    background-image: radial-gradient(circle, color-mix(in srgb, var(--text-muted) 70%, transparent) 1px, transparent 1.5px);
-    background-size: 8px 2px;
-    transform-origin: left;
-    animation: march 1.6s linear infinite;
-}
-
-@keyframes march {
-    to {
-        background-position: 8px 0;
-    }
-}
-
-.clubCell {
-    min-width: 0;
-    padding-top: 0.35rem;
-}
-
-.org,
-.memberOrg {
-    margin-bottom: 0.35rem;
-    font-family: var(--font-display);
-    font-size: 1.05rem;
-    font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: -0.015em;
-    color: var(--text-primary);
-}
-
-.memberOrg {
-    font-size: 0.98rem;
-}
-
-.description {
-    font-size: 0.88rem;
-    line-height: 1.6;
-    color: var(--text-secondary);
-    text-wrap: pretty;
-}
-
 .scope {
-    justify-self: end;
-    align-self: start;
-    margin-top: 0.4rem;
-    padding: 0.2rem 0.6rem;
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
+    margin-top: auto;
+    padding-top: 0.6rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     color: var(--text-muted);
 }
 
-/* Member: one role, several clubs stacked on the right */
-.memberList {
-    grid-column: 2 / -1;
+.members {
     display: grid;
-    list-style: none;
+    grid-template-columns: 12rem minmax(0, 1fr);
 }
 
-.member {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 6.5rem;
-    gap: 1.5rem;
-    padding: 0.85rem 0;
-    border-bottom: 1px dashed var(--border-color);
-}
-
-.member:first-child {
-    padding-top: 0;
-}
-
-.member:last-child {
-    padding-bottom: 0;
-    border-bottom: none;
-}
-
-/* Touch: the focused row (middle of the screen) gets the hover look; rows answer a press */
-.rowFocus::before {
-    transform: scaleX(1);
-}
-
-.rowFocus .role {
+.membersHead {
+    padding: 1.1rem var(--gutter);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     color: var(--accent-primary);
+    border-right: 1px solid var(--border-color);
 }
 
-.rowFocus .roleIcon {
-    transform: rotate(-8deg) scale(1.06);
-    box-shadow: 0 0 24px -4px var(--accent-glow);
+.memberList {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
 }
 
-.row {
-    transition: scale 0.16s var(--ease-out);
-}
-
-.row:active {
-    scale: 0.99;
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .row:hover::before {
-        transform: scaleX(1);
-    }
-
-    .row:hover .role {
-        color: var(--accent-primary);
-    }
-
-    .row:hover .roleText {
-        transform: translateX(6px);
-    }
-
-    .row:hover .roleIcon {
-        transform: rotate(-8deg) scale(1.06);
-        box-shadow: 0 0 24px -4px var(--accent-glow);
-    }
-}
-
-.viewMoreContainer {
+.memberList li {
     display: flex;
-    justify-content: center;
-    margin-top: 3rem;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    margin-right: -1px;
+    font-size: 0.8rem;
 }
 
-@media (max-width: 860px) {
-    .row,
-    .memberRow {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 0.6rem 1rem;
-        padding: 1.25rem 0.25rem;
-    }
-
-    .roleCell {
-        grid-column: 1;
-    }
-
-    .row > .scope {
-        grid-column: 2;
-        grid-row: 1;
-    }
-
-    .clubCell,
-    .memberList {
-        grid-column: 1 / -1;
-        padding-left: calc(38px + 0.9rem);
-    }
-
-    .leader {
-        display: none;
-    }
-
-    .member {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 1rem;
-    }
-
-    .member .clubCell {
-        grid-column: 1;
-        padding-left: 0;
-    }
+.memberName {
+    color: var(--text-primary);
 }
 
-@media (max-width: 640px) {
-    .clubs {
-        padding: 4rem 1rem;
+.memberScope {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.linkedin {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem var(--gutter);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+    transition: background-color var(--d-ui) ease, color var(--d-ui) ease;
+}
+
+.linkedin span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.linkedin:hover {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+@media (max-width: 700px) {
+    .members {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    .clubCell,
-    .memberList {
-        padding-left: 0;
+    .membersHead {
+        border-right: 0;
+        border-bottom: 1px solid var(--border-color);
     }
 }

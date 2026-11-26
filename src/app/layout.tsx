@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, JetBrains_Mono } from "next/font/google";
+import { Anton, Geist, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { defaultDescription, SITE_NAME, SITE_URL } from "@/lib/seo";
 import MotionProvider from "@/components/MotionProvider";
@@ -13,6 +13,14 @@ const jetbrainsMono = JetBrains_Mono({
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
+  display: "swap",
+});
+
+// Condensed display face for the brutalist headlines
+const anton = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-anton",
   display: "swap",
 });
 
@@ -66,7 +74,6 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   alternates: {
-    canonical: SITE_URL,
     types: {
       'application/rss+xml': [
         { url: '/rss.xml', title: 'Udara Nalawansa — Blog' },
@@ -76,10 +83,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#191724' },
-    { media: '(prefers-color-scheme: light)', color: '#faf4ed' },
-  ],
+  themeColor: '#0a0a0a',
+  colorScheme: 'dark',
 };
 
 export default function RootLayout({
@@ -88,7 +93,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={geist.variable} suppressHydrationWarning>
+    // Browser extensions add classes to <html> before React hydrates; ignore those attribute diffs here only.
+    <html lang="en" data-scroll-behavior="smooth" className={`${geist.variable} ${anton.variable}`} suppressHydrationWarning>
       <head />
       <body
         className={`${jetbrainsMono.variable} antialiased`}

@@ -3,6 +3,10 @@ import { SITE_URL } from '@/lib/seo';
 
 const disallowedPaths = ['/api/', '/_next/', '/portfolio-studio/'];
 
+// AI search and user-triggered fetchers may read and cite the site; model-training crawlers may not.
+const aiSearchBots = ['OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User'];
+const aiTrainingBots = ['GPTBot', 'anthropic-ai', 'Google-Extended', 'Applebot-Extended', 'CCBot', 'cohere-ai', 'Bytespider', 'meta-externalagent', 'Diffbot'];
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -12,12 +16,15 @@ export default function robots(): MetadataRoute.Robots {
         disallow: disallowedPaths,
       },
       {
-        userAgent: ['GPTBot', 'ChatGPT-User', 'anthropic-ai', 'Claude-Web', 'Google-Extended', 'CCBot', 'cohere-ai', 'FacebookBot', 'PerplexityBot', 'Bingbot', 'Applebot', 'Diffbot'],
+        userAgent: aiSearchBots,
         allow: '/',
         disallow: disallowedPaths,
       },
+      {
+        userAgent: aiTrainingBots,
+        disallow: '/',
+      },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
   };
 }

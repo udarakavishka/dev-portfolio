@@ -1,5 +1,7 @@
 ---
 title: "(IV)Building a Kubernetes Cluster with Kubespray: A Learning Journey"
+seoTitle: "Kubespray Kubernetes Cluster, Part IV: Deployment"
+excerpt: "Part IV: running Kubespray end to end, from SSH keys and prerequisites to the Ansible playbook, the errors along the way and a working cluster."
 date: "2025-11-27T02:48:00.000+05:30"
 category: "research-diaries"
 updated: "2025-12-05T21:26:25Z"
@@ -7,7 +9,7 @@ readTime: "04 min read"
 mainImage: "/blog/building-a-kubernetes4/cover.png"
 ---
 
-*If you haven’t read the previous posts, **[Part I](https://www.udaradev.me/blog/building-a-kubernetes1)** introduces the motivation for the cluster, **[Part II](https://www.udaradev.me/blog/building-a-kubernetes2)** covers hardware setup, and **[Part III](https://www.udaradev.me/blog/building-a-kubernetes3)** details the networking configuration. With static IPs assigned and network connectivity confirmed, the next critical step was deploying Kubernetes on all nodes.*
+*If you haven’t read the previous posts, **[Part I](/blog/building-a-kubernetes1)** introduces the motivation for the cluster, **[Part II](/blog/building-a-kubernetes2)** covers hardware setup, and **[Part III](/blog/building-a-kubernetes3)** details the networking configuration. With static IPs assigned and network connectivity confirmed, the next critical step was deploying Kubernetes on all nodes.*
 
 Once the hardware and network were in place, it was time for the fun part: bringing Kubernetes to life. We chose Kubespray for its flexibility and automation, but it wasn’t without errors and retries. In this post, I’ll walk through the exact steps we followed ,SSH setup, prerequisites, running the playbook and how we troubleshooted along the way until the cluster finally came online.
 

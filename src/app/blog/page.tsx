@@ -1,27 +1,28 @@
-import { Rss } from 'lucide-react';
 import { getAllPosts } from '@/lib/posts';
 import BlogList from '@/components/BlogList';
 import Reading from '@/components/Reading';
 import Navbar from '@/components/Navbar';
+import BlogHeader from '@/components/BlogHeader';
+import Barricade from '@/components/Barricade';
 import styles from './blog.module.css';
 import type { Metadata } from 'next';
 import { BlogListingSchema, BreadcrumbSchema } from '@/components/StructuredData';
 import { absoluteUrl } from '@/lib/seo';
 
 export const metadata: Metadata = {
-    title: 'DevOps and Cloud Engineering Blog',
-    description: 'DevOps and cloud engineering articles by Udara Nalawansa covering Kubernetes, Docker, CI/CD pipelines, Terraform, AWS, MLOps, and software engineering.',
+    title: 'DevOps, Cloud and ML Engineering Blog',
+    description: 'Notes by Udara Nalawansa on Kubernetes, Terraform, CI/CD, RAG and ML research, plus lessons from a software engineering internship.',
     openGraph: {
-        title: 'DevOps and Cloud Engineering Blog | Udara Nalawansa',
-        description: 'Technical articles about DevOps, cloud infrastructure, Kubernetes, Docker, CI/CD, Terraform, and MLOps.',
+        title: 'DevOps, Cloud and ML Engineering Blog | Udara Nalawansa',
+        description: 'Notes on Kubernetes, Terraform, CI/CD, RAG and ML research, plus lessons from a software engineering internship.',
         url: absoluteUrl('/blog'),
         type: 'website',
         images: ['/screenshot.png'],
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'DevOps and Cloud Engineering Blog | Udara Nalawansa',
-        description: 'Technical articles about DevOps, cloud infrastructure, Kubernetes, Docker, CI/CD, Terraform, and MLOps.',
+        title: 'DevOps, Cloud and ML Engineering Blog | Udara Nalawansa',
+        description: 'Notes on Kubernetes, Terraform, CI/CD, RAG and ML research, plus lessons from a software engineering internship.',
         images: ['/screenshot.png'],
     },
     alternates: {
@@ -46,20 +47,23 @@ export default async function Blog() {
             <BlogListingSchema />
             <Navbar />
             <main className={styles.blog}>
-            <div className={styles.container}>
-                <header className={styles.header}>
-                    <h1 className={styles.title}>blog</h1>
-                    <p className={styles.subtitle}>
-                        notes from work, research, and self-learning. devops, kubernetes, ML, and the bugs in between.
-                    </p>
-                    <a href="/rss.xml" className={styles.feedLink}>
-                        <Rss size={14} />
-                        <span>rss</span>
-                    </a>
-                </header>
-                <BlogList posts={posts} />
-                <Reading />
-            </div>
+                <div className={styles.container}>
+                    <BlogHeader
+                        lineOne="Notes from"
+                        lineTwo="real work"
+                        subtitle="DevOps, cloud and ML notes from work, research and self-learning: Kubernetes, RAG, CI/CD, and the bugs in between."
+                        postCount={posts.length}
+                    />
+                    <div className={styles.body}>
+                        <BlogList posts={posts} />
+                    </div>
+                </div>
+                <Barricade from="blog" to="reading" />
+                <div className={styles.container}>
+                    <div className={styles.body}>
+                        <Reading />
+                    </div>
+                </div>
             </main>
         </>
     );

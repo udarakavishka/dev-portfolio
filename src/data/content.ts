@@ -19,6 +19,7 @@ import {
     MapPinned,
     PenLine,
     Terminal,
+    BriefcaseBusiness,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -59,7 +60,7 @@ interface ProjectItem {
     title: string;
     description: string;
     techStack: string[];
-    githubUrl: string;
+    githubUrl?: string;
     liveUrl?: string;
     isOngoing?: boolean;
     caseStudySlug?: string;
@@ -72,6 +73,16 @@ interface ProjectItem {
 }
 
 export const projectsData: ProjectItem[] = [
+    {
+        id: 14,
+        title: 'SimplyApply',
+        subtitle: 'AI job application tracker',
+        icon: BriefcaseBusiness,
+        tile: 'wide',
+        description: 'Track every job application in one place, with AI that reads job posts, tailors your CV and writes your cover letters. Paste a link, screenshot, PDF or text and an agent turns it into a job card on a pipeline board. Runs on Cloudflare Workers AI or Groq, or on Claude Code, opencode and Codex through a local bridge, with a built-in MCP server.',
+        techStack: ['Python', 'FastAPI', 'PostgreSQL', 'Alembic', 'TypeScript', 'TanStack Start', 'Tailwind', 'shadcn/ui', 'Cloudflare Workers AI', 'Groq', 'MCP', 'Railway'],
+        liveUrl: 'https://simplyapply.udarakavishka13.workers.dev/',
+    },
     {
         id: 12,
         title: 'Agentic Healthcare Assistant',
@@ -308,6 +319,8 @@ interface ExperienceItem {
     description?: string;
     highlights?: string[];
     link?: string;
+    // Product worked on; its name inside the description becomes a link
+    product?: { name: string; url: string };
     // Short tech chips shown under the entry in the Journey section
     tags?: string[];
 }
@@ -317,12 +330,17 @@ export const experienceData: ExperienceItem[] = [
         role: 'Associate Software Engineer',
         company: 'Xaventra (Private) Limited, Colombo',
         period: 'Feb 2026 - Present',
-        description: 'Full stack development on a business services platform — building features and fixing bugs across Flask, FastAPI, and Next.js codebases, integrating WhatsApp Business API chatbots, email services, and RAG-based AI features, and working with production databases, migrations, and CI checks.',
+        link: 'https://xaventra.com',
+        product: { name: 'BizAdvisor', url: 'https://bizadvisor.lk' },
+        description: 'Full stack engineer on BizAdvisor, a company secretarial and business compliance platform, owning features from the database to the UI.',
         highlights: [
-            'Building and maintaining a company secretarial and business compliance platform, spanning a Flask admin CRM, a FastAPI backend, and a Next.js client portal and marketing site.',
-            'Delivered features end to end using Python, Flask, FastAPI, SQLAlchemy, PostgreSQL, and Alembic migrations, and automated deployments with GitHub Actions self-hosted runners monitored through Sentry.',
-            'Designed and integrated RESTful APIs in FastAPI and PostgreSQL against a Next.js and TypeScript frontend, following OpenAPI-driven development so the generated client stays in sync with the backend contract.',
-            'Diagnosed and resolved production issues through log analysis, database inspection, and API tracing, and supported CI/CD workflows, Alembic migrations, and incident response with root-cause analysis.',
+            'Built across four codebases. A Flask admin CRM, a FastAPI backend, and a Next.js client portal and marketing site.',
+            'Shipped features end to end. From PostgreSQL schema and Alembic migrations to API and UI, deployed through GitHub Actions.',
+            'Kept frontend and backend in sync. OpenAPI-driven development, so the generated TypeScript client always matches the API contract.',
+            'Integrated AI and messaging. WhatsApp Business API chatbots, email services, and RAG-based AI features inside the platform.',
+            'Owned production issues. Traced bugs through logs, database, and APIs, fixed root causes, and monitored with Sentry.',
+            'Took initiative beyond my role. In an SME, stepped in wherever the platform needed and proposed improvements that moved the company forward.',
+            'Mentored interns. Guided them through the codebase, workflow, and code reviews as a proactive team player.',
         ],
         tags: ['Flask', 'FastAPI', 'Next.js', 'TypeScript', 'PostgreSQL', 'Alembic', 'GitHub Actions'],
     },

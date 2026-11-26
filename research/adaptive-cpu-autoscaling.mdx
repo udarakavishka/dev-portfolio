@@ -1,5 +1,7 @@
 ---
 title: "Adaptive CPU Auto-Scaling with Hybrid Neural Networks and Continual Learning"
+seoTitle: "Adaptive CPU Autoscaling for Kubernetes (Research)"
+seoDescription: "Final year research: a hybrid LSTM and MLP model forecasts CPU demand, continual learning keeps it accurate, and Kubernetes scales pods early."
 date: "2026-07-20"
 period: "2025 - 2026"
 institution: "University of Vavuniya, BSc (Hons) in IT"
@@ -114,3 +116,16 @@ With the predictive controller suspended and a standard HPA (80% CPU target, 1 t
 The strongest result is retention. Continual learning matched full retraining without rebuilding the model every cycle, while the naive model forgot exactly as the theory predicts. Single-chunk accuracy matters less for this kind of system than staying accurate as the workload keeps changing.
 
 Running it on a real cluster taught me more about Kubernetes than any course did, from writing Prometheus queries to understanding that a CPU percentage is measured against the pod's request, not a core.
+
+## Notes from the research
+
+Shorter write-ups of the ideas behind this project:
+
+- [Scaling on where load is going, not where it's been](/blog/predictive-autoscaling-basics)
+- [Why reactive autoscaling always arrives late](/blog/reactive-autoscaling-arrives-late)
+- [Catastrophic forgetting: when your model unlearns last month](/blog/catastrophic-forgetting)
+- [Elastic weight consolidation in plain terms](/blog/ewc-plain-terms)
+- [Experience replay: a small memory against forgetting](/blog/experience-replay-buffers)
+- [Two-branch models: mixing time series with static context](/blog/hybrid-model-fusion)
+- [MAE, RMSE, or MAPE: which error metric fits capacity planning](/blog/forecast-error-metrics)
+- [Replay a real trace before you trust a scaling policy](/blog/workload-replay-simulation)

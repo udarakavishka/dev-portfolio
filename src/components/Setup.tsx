@@ -1,177 +1,40 @@
-'use client';
-
-import { useRef } from 'react';
-import { motion, type Variants } from 'motion/react';
 import styles from './Setup.module.css';
 import { setupData } from '@/data/content';
 import SectionHeading from './motion/SectionHeading';
-import { gsap, useGSAP, MOTION_OK } from '@/lib/gsap';
 
-// Arch logo as neofetch prints it (Omarchy is Arch based).
-const LOGO = String.raw`                   -${'`'}
-                  .o+${'`'}
-                 ${'`'}ooo/
-                ${'`'}+oooo:
-               ${'`'}+oooooo:
-               -+oooooo+:
-             ${'`'}/:-:++oooo+:
-            ${'`'}/++++/+++++++:
-           ${'`'}/++++++++++++++:
-          ${'`'}/+++ooooooooooooo/${'`'}
-         ./ooosssso++osssssso+${'`'}
-        .oossssso-${'````'}/ossssss+${'`'}
-       -osssssso.      :ssssssso.
-      :osssssss/        osssso+++.
-     /ossssssss/        +ssssooo/-
-   ${'`'}/ossssso+/:-        -:/+osssso+-
-  ${'`'}+sso+:-${'`'}                 ${'`'}.-/+oso:
- ${'`'}++:.                           ${'`'}-/+/
- .${'`'}                                 ${'`'}/`.split('\n');
+const pad = (n: number) => String(n).padStart(2, '0');
 
-const PALETTE = ['#3f3f46', '#f87171', '#4ade80', '#facc15', '#60a5fa', '#c084fc', '#22d3ee', '#e5e7eb'];
-
-// Each block starts after the previous one has finished printing.
-const group = (delay: number, stagger: number): Variants => ({
-    hidden: {},
-    show: { transition: { delayChildren: delay, staggerChildren: stagger } },
-});
-
-const typeChar: Variants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { duration: 0 } },
-};
-
-const printLine: Variants = {
-    hidden: { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
-    show: { opacity: 1, clipPath: 'inset(0 0% 0 0)', transition: { duration: 0.35, ease: 'easeOut' } },
-};
-
-const logoLine: Variants = {
-    hidden: { opacity: 0, x: -6 },
-    show: { opacity: 1, x: 0, transition: { duration: 0.25 } },
-};
-
-function Command({ text, delay }: { text: string; delay: number }) {
-    return (
-        <motion.p className={styles.command} variants={group(delay, 0.04)}>
-            <span className={styles.prompt}>$</span>{' '}
-            {Array.from(text).map((char, index) => (
-                <motion.span key={index} variants={typeChar}>
-                    {char}
-                </motion.span>
-            ))}
-        </motion.p>
-    );
-}
-
+// Three spec sheets side by side: hardware, software, services.
 export default function Setup() {
-    const sectionRef = useRef<HTMLElement>(null);
-
-    // The terminal settles in once; neofetch then prints into it.
-    useGSAP(
-        () => {
-            const mm = gsap.matchMedia();
-            mm.add(MOTION_OK, () => {
-                gsap.from(`.${styles.stage}`, {
-                    y: 24,
-                    autoAlpha: 0,
-                    duration: 0.7,
-                    ease: 'expo.out',
-                    scrollTrigger: { trigger: `.${styles.stage}`, start: 'top 85%', once: true },
-                });
-            });
-        },
-        { scope: sectionRef }
-    );
-    const [hardware, tools, apps] = setupData;
-    const specs = [...hardware.items, ...tools.items];
-    const infoStart = 0.7;
-    const appsCommandStart = infoStart + (specs.length + 3) * 0.06 + 0.4;
-    const appsStart = appsCommandStart + 0.5;
-    const promptStart = appsStart + apps.items.length * 0.06 + 0.4;
+    const total = setupData.reduce((sum, group) => sum + group.items.length, 0);
 
     return (
-        <section id="setup" ref={sectionRef} className={styles.setup}>
-            <div className={styles.container}>
-                <SectionHeading
-                    index="08"
-                    label="setup"
-                    title={<>Where the work <em>happens</em></>}
-                    lede="The machine, the editor and the apps I live in every day."
-                />
-                <div className={styles.stage}>
-                <motion.div
-                    className={styles.window}
-                    initial="hidden"
-                    whileInView="show"
-                    viewport={{ once: true, margin: '-120px' }}
-                >
-                    <div className={styles.titleBar}>
-                        <span className={styles.dots} aria-hidden="true">
-                            <span />
-                            <span />
-                            <span />
-                        </span>
-                        <span className={styles.windowTitle}>udara@omarchy: ~</span>
-                    </div>
+        <section id="setup" className={`${styles.setup} frame`}>
+            <div className="gutter">
+                <SectionHeading index="06" label="Setup" meta={`${total} entries`} title={<>Where the work <em>happens</em></>} />
+            </div>
 
-                    <div className={styles.body}>
-                        <Command text="neofetch" delay={0} />
-
-                        <div className={styles.neofetch}>
-                            <motion.pre className={styles.logo} aria-hidden="true" variants={group(0.5, 0.03)}>
-                                {LOGO.map((line, index) => (
-                                    <motion.span key={index} className={styles.logoLine} variants={logoLine}>
-                                        {line}
-                                    </motion.span>
+            <div className={styles.grid}>
+                {setupData.map((group, index) => {
+                    const Icon = group.icon;
+                    return (
+                        <div key={group.title} className={`${styles.col} ${index === 1 ? styles.paper : ''}`} data-reveal style={{ '--i': index } as React.CSSProperties}>
+                            <div className={styles.head}>
+                                <span className={styles.no}>/{pad(index + 1)}</span>
+                                <h3>{group.title}</h3>
+                                <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
+                            </div>
+                            <dl className={styles.list}>
+                                {group.items.map((item) => (
+                                    <div key={item.name} className={styles.item}>
+                                        <dt>{item.name}</dt>
+                                        <dd>{item.value}</dd>
+                                    </div>
                                 ))}
-                            </motion.pre>
-
-                            <motion.dl className={styles.info} variants={group(infoStart, 0.06)}>
-                                <motion.div className={styles.userHost} variants={printLine}>
-                                    udara<span className={styles.at}>@</span>omarchy
-                                </motion.div>
-                                <motion.div className={styles.rule} variants={printLine} aria-hidden="true">
-                                    -------------
-                                </motion.div>
-                                {specs.map((item) => (
-                                    <motion.div key={item.name} className={styles.row} variants={printLine}>
-                                        <dt className={styles.key}>{item.name}</dt>
-                                        <dd className={styles.value}>{item.value}</dd>
-                                    </motion.div>
-                                ))}
-                                <motion.div className={styles.palette} variants={printLine} aria-hidden="true">
-                                    {PALETTE.map((color, index) => (
-                                        <span
-                                            key={color}
-                                            style={{ backgroundColor: color, animationDelay: `${index * 0.12}s` }}
-                                        />
-                                    ))}
-                                </motion.div>
-                            </motion.dl>
+                            </dl>
                         </div>
-
-                        <Command text="ls ~/apps --long" delay={appsCommandStart} />
-                        <motion.dl className={styles.apps} variants={group(appsStart, 0.06)}>
-                            {apps.items.map((item) => (
-                                <motion.div key={item.name} className={styles.appRow} variants={printLine}>
-                                    <dt className={styles.key}>{item.name}</dt>
-                                    <dd className={styles.value}>
-                                        <span className={styles.arrow} aria-hidden="true">→ </span>
-                                        {item.value}
-                                    </dd>
-                                </motion.div>
-                            ))}
-                        </motion.dl>
-
-                        <motion.p className={styles.command} variants={group(promptStart, 0)} aria-hidden="true">
-                            <motion.span variants={typeChar}>
-                                <span className={styles.prompt}>$</span> <span className={styles.cursor} />
-                            </motion.span>
-                        </motion.p>
-                    </div>
-                </motion.div>
-                </div>
+                    );
+                })}
             </div>
         </section>
     );

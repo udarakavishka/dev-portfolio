@@ -6,6 +6,8 @@ import Research from '@/components/Research';
 import Skills from '@/components/Skills';
 import Contact from '@/components/Contact';
 import Journey from '@/components/Journey';
+import HowIWork from '@/components/HowIWork';
+import Barricade from '@/components/Barricade';
 import Clubs from '@/components/Clubs';
 import Setup from '@/components/Setup';
 import HomeBlog from '@/components/HomeBlog';
@@ -53,13 +55,22 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
+        <HowIWork postCount={posts.length} />
+        <Barricade from="01" to="02" />
         <Journey />
+        <Barricade from="02" to="03" paper />
         <Projects />
-        <Skills />
+        <Barricade from="03" to="04" />
         <Research />
-        <Clubs />
-        <HomeBlog posts={posts.slice(0, 5)} />
+        <Barricade from="04" to="05" paper />
+        <Skills />
+        <Barricade from="05" to="06" />
         <Setup />
+        <Barricade from="06" to="07" paper />
+        <Clubs />
+        <Barricade from="07" to="08" />
+        <HomeBlog posts={posts.slice(0, 5)} />
+        <Barricade from="08" to="09" paper />
         <Contact />
       </main>
     </>
