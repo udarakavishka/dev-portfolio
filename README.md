@@ -170,21 +170,13 @@ npm run lint         # Run ESLint
 
 ## 🚢 Deployment
 
-### Vercel (Recommended)
+### Cloudflare Workers
 
-This project is deployed on [Vercel](https://vercel.com) and accessible at [udaradev.me](https://udaradev.me).
+The site runs on [Cloudflare Workers](https://workers.cloudflare.com) through [OpenNext](https://opennext.js.org/cloudflare) and is live at [udaradev.me](https://udaradev.me).
 
-1. Push your code to GitHub
-2. Import project in Vercel
-3. Add your custom domain (e.g., `udaradev.me`) in Vercel settings
-4. Deploy automatically on every push
-
-### Netlify
-
-1. Push your code to GitHub
-2. Import project in [Netlify](https://netlify.com)
-3. Build command: `npm run build`
-4. Publish directory: `.next`
+- **Automatic:** every push to `main` runs the GitHub Actions workflow in `.github/workflows/ci.yml` (lint, type-check, build), then deploys with `npx opennextjs-cloudflare deploy`. It needs the repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+- **Manual:** `npm run deploy` builds and deploys from your machine (`npx wrangler login` first).
+- **Preview locally on the Workers runtime:** `npm run preview`.
 
 ## 📂 Project Structure
 

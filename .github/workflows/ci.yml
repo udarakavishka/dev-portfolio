@@ -1,7 +1,8 @@
 name: CI
 
-# Deploys are handled by Cloudflare Workers Builds (connected to this repo).
-# This workflow only checks that the app lints, type-checks and builds for Workers.
+# Every push and pull request: lint, type-check and build for Cloudflare Workers.
+# Pushes to main then deploy that same build to the dev-portfolio Worker.
+# Needs repo secrets CLOUDFLARE_API_TOKEN (Workers edit) and CLOUDFLARE_ACCOUNT_ID.
 
 on:
   push:
@@ -11,7 +12,8 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a deploy halfway; older runs on other branches can be cancelled.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -38,3 +40,10 @@ jobs:
 
       - name: Build for Cloudflare Workers
         run: npx opennextjs-cloudflare build
+
+      - name: Deploy to Cloudflare Workers
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npx opennextjs-cloudflare deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

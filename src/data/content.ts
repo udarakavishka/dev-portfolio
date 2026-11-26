@@ -204,24 +204,14 @@ export const projectsData: ProjectItem[] = [
     {
         id: 8,
         title: 'Portfolio Website',
-        subtitle: 'This site, on Next.js and Vercel',
+        subtitle: 'This site, on Next.js and Cloudflare Workers',
         icon: Terminal,
-        description: 'A modern, professional portfolio website showcasing my skills, projects, and experience as a DevOps engineer, built with Next.js and deployed on Vercel for optimal performance and scalability.',
-        techStack: ['Next.js', 'React', 'TypeScript', 'CSS Modules', 'Vercel'],
+        description: 'A modern, professional portfolio website showcasing my skills, projects, and experience as a DevOps engineer, built with Next.js and deployed on Cloudflare Workers.',
+        techStack: ['Next.js', 'React', 'TypeScript', 'CSS Modules', 'Cloudflare Workers'],
         githubUrl: 'https://github.com/udaraKavishka/dev-portfolio',
         liveUrl: 'https://udaradev.me',
         caseStudySlug: 'portfolio-website',
     },
-    // {
-    //     id: 10,
-    //     title: 'Modern Portfolio',
-    //     subtitle: 'Responsive personal website',
-    //     icon: PanelsTopLeft,
-    //     description: 'A sleek, fully responsive personal portfolio website built to showcase projects, skills, and technology interests with modern UI design and smooth navigation.',
-    //     techStack: ['React', 'Tailwind CSS', 'Figma', 'React Scroll', 'SVG Icons'],
-    //     githubUrl: 'https://github.com/udaraKavishka/modern-portfolio',
-    //     liveUrl: 'https://udara-portfolio.vercel.app/'
-    // },
     // {
     //     id: 11,
     //     title: 'Predictive Kubernetes Autoscaler with Continual Learning',
